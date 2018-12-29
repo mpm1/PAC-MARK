@@ -6,7 +6,7 @@ public class PlayerMovement : MonoBehaviour
 {
     public float speed = 5.0f;
 
-    private Rigidbody2D rigidbody;
+    private new Rigidbody2D rigidbody;
 
     private void Awake()
     {

@@ -9,7 +9,7 @@ public class EnvironmentCamera : MonoBehaviour
     public bool followPlayer = false;
     public float smoothing = 0.2f;
 
-    private Camera camera;
+    private new Camera camera;
 
     private void Awake()
     {
