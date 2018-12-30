@@ -41,13 +41,16 @@ public class EnvironmentGenerator : MonoBehaviour
         eDirection ghostDoor = GenerateGhostBox();
 
         // Rpgressivly grow each starting tile location until we have single tile sized halways.
-        for(int i = 0; i < 100; ++i)
+        for(int i = 0; i < 2; ++i)
         {
+            tileDetails.SwapTileMap();
             if (!GrowMap())
             {
                 break;
             }
         }
+
+        tileDetails.Finish();
     }
 
     private void SetStartTiles()
@@ -151,7 +154,7 @@ public class TileDrawer
 
     public void Init()
     {
-        tileMapBuffer = tileMap;
+        tileMapBuffer = Object.Instantiate(tileMap, tileMap.transform.parent);
         positions = new Tile[] { single, north, south, vertical, east, northEast, southEast, verticalEast, west, northWest, southWest, verticalWest, horizontal, horizontalNorth, horizontalSouth, all };
     }
 
@@ -159,12 +162,12 @@ public class TileDrawer
     {
         if (tl == null || br == null)
         {
-            tileMap.ClearAllTiles();
+            tileMapBuffer.ClearAllTiles();
         }
         else
         {
             Vector3Int delta = br.Value - tl.Value;
-            tileMap.BoxFill(tl.Value, null, 0, 0, delta.x, delta.y);
+            tileMapBuffer.BoxFill(tl.Value, null, 0, 0, delta.x, delta.y);
         }
     }
 
@@ -255,7 +258,7 @@ public class TileDrawer
 
         if(tile == null)
         {
-            tileMap.SetTile(position, single);
+            tileMapBuffer.SetTile(position, single);
         }
 
         if (updateTile)
@@ -272,31 +275,31 @@ public class TileDrawer
         Vector3Int northPos = position + new Vector3Int(0, 1, 0);
         Vector3Int southPos = position + new Vector3Int(0, -1, 0);
 
-        if(tileMap.GetTile(northPos) != null)
+        if(tileMapBuffer.GetTile(northPos) != null)
         {
             if(updateChildren) UpdateTile(northPos, false);
             result = result | 0x000001;
         }
 
-        if (tileMap.GetTile(southPos) != null)
+        if (tileMapBuffer.GetTile(southPos) != null)
         {
             if(updateChildren) UpdateTile(southPos, false);
             result = result | 0x000002;
         }
 
-        if (tileMap.GetTile(eastPos) != null)
+        if (tileMapBuffer.GetTile(eastPos) != null)
         {
             if(updateChildren) UpdateTile(eastPos, false);
             result = result | 0x000004;
         }
 
-        if (tileMap.GetTile(westPos) != null)
+        if (tileMapBuffer.GetTile(westPos) != null)
         {
             if(updateChildren) UpdateTile(westPos, false);
             result = result | 0x000008;
         }
 
-        tileMap.SetTile(position, positions[result]);
+        tileMapBuffer.SetTile(position, positions[result]);
     }
 
     public Vector3Int GetTileCoordinates(Vector3 worldCoordinates)
@@ -309,33 +312,33 @@ public class TileDrawer
         TileBase tile = tileMap.GetTile(location);
         bool canGrow = false;
 
-        Vector3Int[] checkLocations =
-        {
-            location + new Vector3Int(-2, -2, 0),
-            location + new Vector3Int(0, -2, 0),
-            location + new Vector3Int(2, -2, 0),
-            location + new Vector3Int(-2, 0, 0),
-            location + new Vector3Int(2, 0, 0),
-            location + new Vector3Int(-2, 2, 0),
-            location + new Vector3Int(0, 2, 0),
-            location + new Vector3Int(2, 2, 0)
-        };
-
-        Vector3Int[] newLocations =
-        {
-            location + new Vector3Int(-1, -1, 0),
-            location + new Vector3Int(0, -1, 0),
-            location + new Vector3Int(1, -1, 0),
-            location + new Vector3Int(-1, 0, 0),
-            location + new Vector3Int(1, 0, 0),
-            location + new Vector3Int(-1, 1, 0),
-            location + new Vector3Int(0, 1, 0),
-            location + new Vector3Int(1, 1, 0)
-        };
-
         if (tile == single)
         {
-            for(int i = 0; i < 8; ++i)
+            Vector3Int[] checkLocations =
+            {
+                location + new Vector3Int(-2, -2, 0),
+                location + new Vector3Int(0, -2, 0),
+                location + new Vector3Int(2, -2, 0),
+                location + new Vector3Int(-2, 0, 0),
+                location + new Vector3Int(2, 0, 0),
+                location + new Vector3Int(-2, 2, 0),
+                location + new Vector3Int(0, 2, 0),
+                location + new Vector3Int(2, 2, 0)
+            };
+
+            Vector3Int[] newLocations =
+            {
+                location + new Vector3Int(-1, -1, 0),
+                location + new Vector3Int(0, -1, 0),
+                location + new Vector3Int(1, -1, 0),
+                location + new Vector3Int(-1, 0, 0),
+                location + new Vector3Int(1, 0, 0),
+                location + new Vector3Int(-1, 1, 0),
+                location + new Vector3Int(0, 1, 0),
+                location + new Vector3Int(1, 1, 0)
+            };
+
+            for (int i = 0; i < 8; ++i)
             {
                 if(CanGrow(newLocations[i], minBounds, maxBounds) && tileMap.GetTile(checkLocations[i]) == null)
                 {
@@ -350,6 +353,19 @@ public class TileDrawer
         return canGrow;
     }
 
+    public void SwapTileMap()
+    {
+        Transform parent = tileMap.transform.parent;
+        string name = tileMap.name;
+        Object.Destroy(tileMap.gameObject);
+
+        tileMap = tileMapBuffer;
+        tileMapBuffer = Object.Instantiate(tileMap, parent);
+
+        tileMap.transform.parent = parent;
+        tileMap.name = name;
+    }
+
     private bool CanGrow(Vector3Int location, Vector3Int minBounds, Vector3Int maxBounds)
     {
         if(location.x < minBounds.x || location.y < minBounds.y || location.x > maxBounds.x || location.y > maxBounds.y)
@@ -358,5 +374,11 @@ public class TileDrawer
         }
 
         return tileMap.GetTile(location) == null;
+    }
+
+    public void Finish()
+    {
+        SwapTileMap();
+        Object.Destroy(tileMapBuffer.gameObject);
     }
 }
