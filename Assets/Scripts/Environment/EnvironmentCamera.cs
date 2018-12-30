@@ -26,7 +26,7 @@ public class EnvironmentCamera : MonoBehaviour
         if (followPlayer)
         {
             newPosition = player.transform.position;
-            zoom = 1.0f; //TODO: increase the camera size to show all ghosts.
+            zoom = 2.0f; //TODO: increase the camera size to show all ghosts.
         }
         else
         {
