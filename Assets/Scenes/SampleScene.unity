@@ -635,8 +635,8 @@ MonoBehaviour:
   seed: 654636
   isVerticalSymetrical: 1
   isHorizontalSymetrical: 0
-  minStartTiles: 6
-  maxStartTiles: 10
+  minStartTiles: 13
+  maxStartTiles: 20
   ghostBoxScale: {x: 10, y: 6, z: 0}
   ghostBoxDoorSize: 0
   tileDetails:
@@ -812,12 +812,12 @@ PrefabInstance:
     - target: {fileID: 937124671817345001, guid: b9f3370e8004c0449ad37ed5b59542fb,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0
+      value: -0.04
       objectReference: {fileID: 0}
     - target: {fileID: 937124671817345001, guid: b9f3370e8004c0449ad37ed5b59542fb,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -5.5
+      value: -3.64
       objectReference: {fileID: 0}
     - target: {fileID: 937124671817345001, guid: b9f3370e8004c0449ad37ed5b59542fb,
         type: 3}

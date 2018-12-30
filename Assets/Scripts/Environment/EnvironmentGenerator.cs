@@ -37,35 +37,50 @@ public class EnvironmentGenerator : MonoBehaviour
         int pelletCount = Random.Range(minLargePellets, maxLargePellets);
 
         tileDetails.Clear();
-        SetStartTiles();
+        System.Collections.Generic.List<Vector3Int> tiles = SetStartTiles();
         eDirection ghostDoor = GenerateGhostBox();
 
         // Rpgressivly grow each starting tile location until we have single tile sized halways.
-        for(int i = 0; i < 2; ++i)
+        for(int i = 0; i < 100; ++i)
         {
-            tileDetails.SwapTileMap();
-            if (!GrowMap())
+            if ((tiles = GrowMap(tiles)).Count <= 0)
             {
                 break;
             }
         }
 
-        tileDetails.Finish();
+        tileDetails.Finish(new Rect(transform.position - (transform.lossyScale / 2.0f), transform.lossyScale));
     }
 
-    private void SetStartTiles()
+    private System.Collections.Generic.List<Vector3Int> SetStartTiles()
     {
+        System.Collections.Generic.List<Vector3Int> startTiles = new System.Collections.Generic.List<Vector3Int>();
+
         int tileCount = Random.Range(minStartTiles, maxStartTiles);
         Rect rect = new Rect(transform.position - (transform.lossyScale / 2.0f), transform.lossyScale);
         Vector3Int min = tileDetails.GetTileCoordinates(new Vector3(rect.xMin, rect.yMin, 0.0f));
         Vector3Int max = tileDetails.GetTileCoordinates(new Vector3(rect.xMax, rect.yMax, 0.0f));
         Vector3Int size = max - min;
+        
+        if((size.x & 0x01) == 0)
+        {
+            max.x -= 1;
+            size = max - min;
+        }
+
+        if ((size.x & 0x01) == 0)
+        {
+            max.y -= 1;
+            size = max - min;
+        }
+
         Vector3Int halfSize = new Vector3Int(size.x >> 1, size.y >> 1, size.z >> 1);
         Vector3Int axis = min + halfSize;
 
         for (int i = 0; i < tileCount; ++i)
         {
             Vector3Int location = new Vector3Int(Random.Range(min.x, max.x), Random.Range(min.y, max.y), 0);
+            startTiles.Add(location);
 
             tileDetails.PlaceWall(location);
 
@@ -83,10 +98,13 @@ public class EnvironmentGenerator : MonoBehaviour
                     newLocation.x = (axis.x << 1) - newLocation.x;
                 }
 
+                startTiles.Add(newLocation);
                 tileDetails.PlaceWall(newLocation);
                 ++i;
             }
         }
+
+        return startTiles;
     }
 
     private eDirection GenerateGhostBox()
@@ -108,23 +126,19 @@ public class EnvironmentGenerator : MonoBehaviour
         return doorDirection;
     }
 
-    private bool GrowMap()
+    private System.Collections.Generic.List<Vector3Int> GrowMap(System.Collections.Generic.List<Vector3Int> tiles)
     {
-        bool hasGrown = false;
+        System.Collections.Generic.List<Vector3Int> result = new System.Collections.Generic.List<Vector3Int>();
+
         Rect rect = new Rect(transform.position - (transform.lossyScale / 2.0f), transform.lossyScale);
         Vector3Int min = tileDetails.GetTileCoordinates(new Vector3(rect.xMin, rect.yMin, 0.0f));
         Vector3Int max = tileDetails.GetTileCoordinates(new Vector3(rect.xMax, rect.yMax, 0.0f));
-        Vector3Int location = min;
 
-        for(location.y = min.y; location.y <= max.y; ++location.y)
-        {
-            for(location.x = min.x; location.x <= max.x; ++location.x)
-            {
-                hasGrown |= tileDetails.GrowTile(location, min, max);
-            }
+        foreach(Vector3Int location in tiles) {
+                result.AddRange(tileDetails.GrowTile(location, min, max));
         }
 
-        return hasGrown;
+        return result;
     }
 
     private void OnDrawGizmos()
@@ -150,11 +164,9 @@ public class TileDrawer
     public Tile single;
 
     private Tile[] positions;
-    private Tilemap tileMapBuffer;
 
     public void Init()
     {
-        tileMapBuffer = Object.Instantiate(tileMap, tileMap.transform.parent);
         positions = new Tile[] { single, north, south, vertical, east, northEast, southEast, verticalEast, west, northWest, southWest, verticalWest, horizontal, horizontalNorth, horizontalSouth, all };
     }
 
@@ -162,12 +174,12 @@ public class TileDrawer
     {
         if (tl == null || br == null)
         {
-            tileMapBuffer.ClearAllTiles();
+            tileMap.ClearAllTiles();
         }
         else
         {
             Vector3Int delta = br.Value - tl.Value;
-            tileMapBuffer.BoxFill(tl.Value, null, 0, 0, delta.x, delta.y);
+            tileMap.BoxFill(tl.Value, null, 0, 0, delta.x, delta.y);
         }
     }
 
@@ -258,7 +270,7 @@ public class TileDrawer
 
         if(tile == null)
         {
-            tileMapBuffer.SetTile(position, single);
+            tileMap.SetTile(position, single);
         }
 
         if (updateTile)
@@ -275,31 +287,31 @@ public class TileDrawer
         Vector3Int northPos = position + new Vector3Int(0, 1, 0);
         Vector3Int southPos = position + new Vector3Int(0, -1, 0);
 
-        if(tileMapBuffer.GetTile(northPos) != null)
+        if(tileMap.GetTile(northPos) != null)
         {
             if(updateChildren) UpdateTile(northPos, false);
             result = result | 0x000001;
         }
 
-        if (tileMapBuffer.GetTile(southPos) != null)
+        if (tileMap.GetTile(southPos) != null)
         {
             if(updateChildren) UpdateTile(southPos, false);
             result = result | 0x000002;
         }
 
-        if (tileMapBuffer.GetTile(eastPos) != null)
+        if (tileMap.GetTile(eastPos) != null)
         {
             if(updateChildren) UpdateTile(eastPos, false);
             result = result | 0x000004;
         }
 
-        if (tileMapBuffer.GetTile(westPos) != null)
+        if (tileMap.GetTile(westPos) != null)
         {
             if(updateChildren) UpdateTile(westPos, false);
             result = result | 0x000008;
         }
 
-        tileMapBuffer.SetTile(position, positions[result]);
+        tileMap.SetTile(position, positions[result]);
     }
 
     public Vector3Int GetTileCoordinates(Vector3 worldCoordinates)
@@ -307,23 +319,32 @@ public class TileDrawer
         return tileMap.WorldToCell(worldCoordinates);
     }
 
-    public bool GrowTile(Vector3Int location, Vector3Int minBounds, Vector3Int maxBounds)
+    public System.Collections.Generic.List<Vector3Int> GrowTile(Vector3Int location, Vector3Int minBounds, Vector3Int maxBounds)
     {
+        System.Collections.Generic.List<Vector3Int> result = new System.Collections.Generic.List<Vector3Int>();
         TileBase tile = tileMap.GetTile(location);
-        bool canGrow = false;
 
         if (tile == single)
         {
             Vector3Int[] checkLocations =
             {
+                location + new Vector3Int(-2, -1, 0),
                 location + new Vector3Int(-2, -2, 0),
+                location + new Vector3Int(-1, -2, 0),
                 location + new Vector3Int(0, -2, 0),
+                location + new Vector3Int(1, -2, 0),
                 location + new Vector3Int(2, -2, 0),
-                location + new Vector3Int(-2, 0, 0),
+                location + new Vector3Int(2, -1, 0),
                 location + new Vector3Int(2, 0, 0),
-                location + new Vector3Int(-2, 2, 0),
+                location + new Vector3Int(2, 1, 0),
+                location + new Vector3Int(2, 2, 0),
+                location + new Vector3Int(1, 2, 0),
                 location + new Vector3Int(0, 2, 0),
-                location + new Vector3Int(2, 2, 0)
+                location + new Vector3Int(-1, 2, 0),
+                location + new Vector3Int(-2, 2, 0),
+                location + new Vector3Int(-2, 1, 0),
+                location + new Vector3Int(-2, 0, 0),
+                location + new Vector3Int(-2, -1, 0)
             };
 
             Vector3Int[] newLocations =
@@ -331,39 +352,28 @@ public class TileDrawer
                 location + new Vector3Int(-1, -1, 0),
                 location + new Vector3Int(0, -1, 0),
                 location + new Vector3Int(1, -1, 0),
-                location + new Vector3Int(-1, 0, 0),
                 location + new Vector3Int(1, 0, 0),
-                location + new Vector3Int(-1, 1, 0),
+                location + new Vector3Int(1, 1, 0),
                 location + new Vector3Int(0, 1, 0),
-                location + new Vector3Int(1, 1, 0)
+                location + new Vector3Int(-1, 1, 0),
+                location + new Vector3Int(-1, 0, 0),
             };
 
             for (int i = 0; i < 8; ++i)
             {
-                if(CanGrow(newLocations[i], minBounds, maxBounds) && tileMap.GetTile(checkLocations[i]) == null)
+                int j = i << 1;
+                if(CanGrow(newLocations[i], minBounds, maxBounds) 
+                    && tileMap.GetTile(checkLocations[j]) == null
+                    && tileMap.GetTile(checkLocations[j + 1]) == null
+                    && tileMap.GetTile(checkLocations[j + 2]) == null)
                 {
-                    canGrow = true;
-                    tileMapBuffer.SetTile(newLocations[i], single);
+                    result.Add(newLocations[i]);
+                    tileMap.SetTile(newLocations[i], single);
                 }
             }
-
-            //tileMap.SetTile(location, all);
         }
 
-        return canGrow;
-    }
-
-    public void SwapTileMap()
-    {
-        Transform parent = tileMap.transform.parent;
-        string name = tileMap.name;
-        Object.Destroy(tileMap.gameObject);
-
-        tileMap = tileMapBuffer;
-        tileMapBuffer = Object.Instantiate(tileMap, parent);
-
-        tileMap.transform.parent = parent;
-        tileMap.name = name;
+        return result;
     }
 
     private bool CanGrow(Vector3Int location, Vector3Int minBounds, Vector3Int maxBounds)
@@ -376,9 +386,18 @@ public class TileDrawer
         return tileMap.GetTile(location) == null;
     }
 
-    public void Finish()
+    public void Finish(Rect rect)
     {
-        SwapTileMap();
-        Object.Destroy(tileMapBuffer.gameObject);
+        Vector3Int min = GetTileCoordinates(new Vector3(rect.xMin, rect.yMin, 0.0f));
+        Vector3Int max = GetTileCoordinates(new Vector3(rect.xMax, rect.yMax, 0.0f));
+        Vector3Int location = min;
+
+        //for (location.y = min.y; location.y <= max.y; ++location.y)
+        //{
+        //    for (location.x = min.x; location.x <= max.x; ++location.x)
+        //    {
+        //        UpdateTile(location, false);
+        //    }
+        //}
     }
 }
