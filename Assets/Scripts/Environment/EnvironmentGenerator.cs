@@ -1,25 +1,41 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.Tilemaps;
 
 public class EnvironmentGenerator : MonoBehaviour
 {
     private enum eDirection { East = 0, North, South, West };
+    public enum eMirror {
+        Vertical = 0x01,
+        Horizontal = 0x02,
+        Both = 0x03
+    }
 
     public GameObject smallPellet;
     public GameObject largePellet;
     public int maxLargePellets = 6;
     public int minLargePellets = 2;
     public int seed = 0;
-    public bool isVerticalSymetrical = false;
-    public bool isHorizontalSymetrical = true;
-
-    [Range(1, 20)]
-    public int minStartTiles = 4;
-    [Range(1, 20)]
-    public int maxStartTiles = 6;
+    public eMirror mirroring = eMirror.Vertical;
 
     public Vector3 ghostBoxScale;
     public float ghostBoxDoorSize;
+
+    private bool isVerticalMirror
+    {
+        get
+        {
+            return ((int)mirroring & (int)eMirror.Vertical) == (int)eMirror.Vertical;
+        }
+    }
+
+    private bool isHorizontalMirror
+    {
+        get
+        {
+            return ((int)mirroring & (int)eMirror.Horizontal) == (int)eMirror.Horizontal;
+        }
+    }
 
     [Header("Tile Details")]
     public TileDrawer tileDetails;
@@ -36,109 +52,280 @@ public class EnvironmentGenerator : MonoBehaviour
 
         int pelletCount = Random.Range(minLargePellets, maxLargePellets);
 
-        tileDetails.Clear();
-        System.Collections.Generic.List<Vector3Int> tiles = SetStartTiles();
-        eDirection ghostDoor = GenerateGhostBox();
-
-        // Rpgressivly grow each starting tile location until we have single tile sized halways.
-        for(int i = 0; i < 100; ++i)
-        {
-            if ((tiles = GrowMap(tiles)).Count <= 0)
-            {
-                break;
-            }
-        }
-
-        tileDetails.Finish(new Rect(transform.position - (transform.lossyScale / 2.0f), transform.lossyScale));
-    }
-
-    private System.Collections.Generic.List<Vector3Int> SetStartTiles()
-    {
-        System.Collections.Generic.List<Vector3Int> startTiles = new System.Collections.Generic.List<Vector3Int>();
-
-        int tileCount = Random.Range(minStartTiles, maxStartTiles);
+        // Find the size of the map
         Rect rect = new Rect(transform.position - (transform.lossyScale / 2.0f), transform.lossyScale);
         Vector3Int min = tileDetails.GetTileCoordinates(new Vector3(rect.xMin, rect.yMin, 0.0f));
         Vector3Int max = tileDetails.GetTileCoordinates(new Vector3(rect.xMax, rect.yMax, 0.0f));
-        Vector3Int size = max - min;
-        
-        if((size.x & 0x01) == 0)
+
+        Vector3Int ghostMin, ghostMax;
+
+        //Due to how the collider is not reseting, we will disable it to begin with and enable it after.
+        Collider2D collider = tileDetails.tileMap.GetComponent<TilemapCollider2D>();
+        collider.enabled = false;
+
+        tileDetails.Fill(min, max, tileDetails.single);
+        eDirection ghostDoor = GenerateGhostBox(out ghostMin, out ghostMax);
+
+        // Check which kind of symetry we need and set the min and max accordingly.
+        if(isVerticalMirror)
         {
-            max.x -= 1;
-            size = max - min;
+            max.y = (max.y + min.y) >> 1;
         }
 
-        if ((size.x & 0x01) == 0)
+        if (isHorizontalMirror)
         {
-            max.y -= 1;
-            size = max - min;
+            max.x = (max.x + min.x) >> 1;
         }
 
-        Vector3Int halfSize = new Vector3Int(size.x >> 1, size.y >> 1, size.z >> 1);
-        Vector3Int axis = min + halfSize;
+        GenerateMaze(min, max, ghostMax, ghostMin);
+        Finish();
 
-        for (int i = 0; i < tileCount; ++i)
-        {
-            Vector3Int location = new Vector3Int(Random.Range(min.x, max.x), Random.Range(min.y, max.y), 0);
-            startTiles.Add(location);
-
-            tileDetails.PlaceWall(location);
-
-            if (isVerticalSymetrical || isHorizontalSymetrical)
-            {
-                Vector3Int newLocation = location;
-
-                if (isVerticalSymetrical)
-                {
-                    newLocation.y = (axis.y << 1) - newLocation.y;
-                }
-
-                if (isHorizontalSymetrical)
-                {
-                    newLocation.x = (axis.x << 1) - newLocation.x;
-                }
-
-                startTiles.Add(newLocation);
-                tileDetails.PlaceWall(newLocation);
-                ++i;
-            }
-        }
-
-        return startTiles;
+        collider.enabled = true;
     }
 
-    private eDirection GenerateGhostBox()
+    private void Finish()
     {
-        eDirection doorDirection = (eDirection)Random.Range(0, 3);
+        Rect rect = new Rect(transform.position - (transform.lossyScale / 2.0f), transform.lossyScale);
+        Vector3Int min = tileDetails.GetTileCoordinates(new Vector3(rect.xMin, rect.yMin, 0.0f));
+        Vector3Int max = tileDetails.GetTileCoordinates(new Vector3(rect.xMax, rect.yMax, 0.0f));
+        Vector3Int location = min;
+
+        for (; location.y < max.y; ++location.y)
+        {
+            for(location.x = min.x; location.x < max.x; ++location.x)
+            {
+                tileDetails.UpdateTile(location, false);
+            }
+        }
+    }
+
+    private eDirection GenerateGhostBox(out Vector3Int min, out Vector3Int max)
+    {
+        eDirection doorDirection = (eDirection)Random.Range(0, 4);
 
         Rect rect = new Rect(transform.position - (ghostBoxScale / 2.0f), ghostBoxScale);
-        Vector3Int tl = tileDetails.GetTileCoordinates(new Vector3(rect.xMin, rect.yMin, 0.0f));
-        Vector3Int tr = tileDetails.GetTileCoordinates(new Vector3(rect.xMax, rect.yMin, 0.0f));
-        Vector3Int bl = tileDetails.GetTileCoordinates(new Vector3(rect.xMin, rect.yMax, 0.0f));
-        Vector3Int br = tileDetails.GetTileCoordinates(new Vector3(rect.xMax, rect.yMax, 0.0f));
+        min = tileDetails.GetTileCoordinates(new Vector3(rect.xMin, rect.yMin, 0.0f));
+        max = tileDetails.GetTileCoordinates(new Vector3(rect.xMax, rect.yMax, 0.0f));
+        Vector3Int incr = new Vector3Int(1, 1, 0);
 
-        tileDetails.Clear(tl, br);
-        tileDetails.DrawLine(tl, tr);
-        tileDetails.DrawLine(tl, bl);
-        tileDetails.DrawLine(bl, br);
-        tileDetails.DrawLine(br, tr);
+        tileDetails.Fill(min + incr, max - incr, null);
 
         return doorDirection;
     }
 
-    private System.Collections.Generic.List<Vector3Int> GrowMap(System.Collections.Generic.List<Vector3Int> tiles)
+    private void GenerateMaze(Vector3Int min, Vector3Int max, Vector3Int ghostMax, Vector3Int ghostMin)
     {
-        System.Collections.Generic.List<Vector3Int> result = new System.Collections.Generic.List<Vector3Int>();
+        List<Vector3Int> walls = new List<Vector3Int>();
+        Vector3Int delta = max - min;
 
-        Rect rect = new Rect(transform.position - (transform.lossyScale / 2.0f), transform.lossyScale);
-        Vector3Int min = tileDetails.GetTileCoordinates(new Vector3(rect.xMin, rect.yMin, 0.0f));
-        Vector3Int max = tileDetails.GetTileCoordinates(new Vector3(rect.xMax, rect.yMax, 0.0f));
-
-        foreach(Vector3Int location in tiles) {
-                result.AddRange(tileDetails.GrowTile(location, min, max));
+        // Pick the start location along the wall
+        Vector3Int cellIncr;
+        if (isVerticalMirror)
+        {
+            cellIncr = new Vector3Int(Random.Range(1, delta.x), 0, 0);
+            PlaceHall(min + cellIncr, walls, min, max);
         }
 
-        return result;
+        if (isHorizontalMirror)
+        {
+            cellIncr = new Vector3Int(0, Random.Range(1, delta.y), 0);
+            PlaceHall(min + cellIncr, walls, min, max);
+        }
+
+        while (walls.Count > 0)
+        {
+            int i = Random.Range(0, walls.Count);
+            if (CanRemoveWall(walls[i], min, max))
+            {
+                PlaceHall(walls[i], walls, min, max);
+            }
+
+            walls.RemoveAt(i);
+        }
+    }
+
+    private bool CanRemoveWall(Vector3Int location, Vector3Int min, Vector3Int max)
+    {
+        TileBase tile = tileDetails.tileMap.GetTile(location);
+
+        if(tile == null)
+        {
+            return false;
+        }
+
+        /*if(location.x == min.x || location.y == min.y)
+        {
+            return false;
+        }
+
+        if (location.x == max.x && !isHorizontalMirror)
+        {
+            return false;
+        }
+
+        if(location.y == max.y && !isVerticalMirror)
+        {
+            return false;
+        }*/
+
+        // Check Vertical
+        int hallCount = 0;
+        if(tileDetails.tileMap.GetTile(location + Vector3Int.up) == null)
+        {
+            ++hallCount;
+        }
+
+        if(tileDetails.tileMap.GetTile(location + Vector3Int.down) == null)
+        {
+            ++hallCount;
+
+            if(hallCount > 2) {
+                return false;
+            }
+        }
+
+        if(tileDetails.tileMap.GetTile(location + Vector3Int.right) == null)
+        {
+            ++hallCount;
+
+            if (hallCount > 2)
+            {
+                return false;
+            }
+        }
+
+        if(tileDetails.tileMap.GetTile(location + Vector3Int.left) == null)
+        {
+            ++hallCount;
+
+            if (hallCount > 2)
+            {
+                return false;
+            }
+        }
+
+        if (tileDetails.tileMap.GetTile(location + Vector3Int.up + Vector3Int.left) == null)
+        {
+            ++hallCount;
+
+            if (hallCount > 2)
+            {
+                return false;
+            }
+        }
+
+        if (tileDetails.tileMap.GetTile(location + Vector3Int.down + Vector3Int.right) == null)
+        {
+            ++hallCount;
+
+            if (hallCount > 2)
+            {
+                return false;
+            }
+        }
+
+        if (tileDetails.tileMap.GetTile(location + Vector3Int.right + Vector3Int.up) == null)
+        {
+            ++hallCount;
+
+            if (hallCount > 2)
+            {
+                return false;
+            }
+        }
+
+        if (tileDetails.tileMap.GetTile(location + Vector3Int.left + Vector3Int.down) == null)
+        {
+            ++hallCount;
+
+            if (hallCount > 2)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private bool PlaceHall(Vector3Int location, List<Vector3Int> walls, Vector3Int min, Vector3Int max)
+    {
+        RemoveWall(location, walls, min, max);
+
+        // Add corresponding walls if we are on the edge
+        if (location.x == min.x)
+        {
+            Vector3Int newLocation = location;
+            newLocation.x = max.x;
+            RemoveWall(newLocation, walls, min, max);
+        }
+        else if(location.y == min.y)
+        {
+            Vector3Int newLocation = location;
+            newLocation.y = max.y;
+            RemoveWall(newLocation, walls, min, max);
+        }
+
+        return true;
+    }
+
+    private void RemoveWall(Vector3Int location, List<Vector3Int> walls, Vector3Int min, Vector3Int max)
+    {
+        tileDetails.RemoveWall(location);
+
+        if(location.x > min.x)
+        {
+            Vector3Int checkWall = location + Vector3Int.left;
+
+            if (tileDetails.tileMap.GetTile(checkWall) != null)
+            {
+                walls.Add(checkWall);
+            }
+        }
+
+        if (location.y > min.y)
+        {
+            Vector3Int checkWall = location + Vector3Int.down;
+
+            if (tileDetails.tileMap.GetTile(checkWall) != null)
+            {
+                walls.Add(checkWall);
+            }
+        }
+
+        if (location.x < max.x)
+        {
+            Vector3Int checkWall = location + Vector3Int.right;
+
+            if (tileDetails.tileMap.GetTile(checkWall) != null)
+            {
+                walls.Add(checkWall);
+            }
+        }
+
+        if (location.y < max.y)
+        {
+            Vector3Int checkWall = location + Vector3Int.up;
+
+            if (tileDetails.tileMap.GetTile(checkWall) != null)
+            {
+                walls.Add(checkWall);
+            }
+        }
+
+        // Mirror results
+        if (isVerticalMirror)
+        {
+            Vector3Int newLocation = location;
+            newLocation.y = (max.y << 1) - location.y;
+            tileDetails.RemoveWall(newLocation); 
+        }
+
+        if (isHorizontalMirror)
+        {
+            Vector3Int newLocation = location;
+            newLocation.x = (max.x << 1) - location.x;
+            tileDetails.RemoveWall(newLocation);
+        }
     }
 
     private void OnDrawGizmos()
@@ -170,16 +357,30 @@ public class TileDrawer
         positions = new Tile[] { single, north, south, vertical, east, northEast, southEast, verticalEast, west, northWest, southWest, verticalWest, horizontal, horizontalNorth, horizontalSouth, all };
     }
 
-    public void Clear(Vector3Int? tl = null, Vector3Int? br = null)
+    public void Clear(Vector3Int? min = null, Vector3Int? max = null)
     {
-        if (tl == null || br == null)
+        if (min == null || max == null)
         {
             tileMap.ClearAllTiles();
         }
         else
         {
-            Vector3Int delta = br.Value - tl.Value;
-            tileMap.BoxFill(tl.Value, null, 0, 0, delta.x, delta.y);
+            Vector3Int delta = max.Value - min.Value;
+            tileMap.BoxFill(min.Value, null, 0, 0, delta.x, delta.y);
+        }
+    }
+
+    public void Fill(Vector3Int min, Vector3Int max, TileBase tile)
+    {
+        Vector3Int location = min;
+        
+
+        for(; location.y <= max.y; ++location.y)
+        {
+            for(location.x = min.x; location.x <= max.x; ++location.x)
+            {
+                tileMap.SetTile(location, tile);
+            }
         }
     }
 
@@ -264,6 +465,21 @@ public class TileDrawer
         }
     }
 
+    public void RemoveWall(Vector3Int position, bool updateTile = false)
+    {
+        TileBase tile = tileMap.GetTile(position);
+
+        if (tile != null)
+        {
+            tileMap.SetTile(position, null);
+
+            if (updateTile)
+            {
+                UpdateTile(position, true);
+            }
+        }
+    }
+
     public void PlaceWall(Vector3Int position, bool updateTile = false)
     {
         TileBase tile = tileMap.GetTile(position);
@@ -279,13 +495,13 @@ public class TileDrawer
         }
     }
 
-    private void UpdateTile(Vector3Int position, bool updateChildren)
+    public void UpdateTile(Vector3Int position, bool updateChildren)
     {
         uint result = 0;
-        Vector3Int eastPos = position + new Vector3Int(1, 0, 0);
-        Vector3Int westPos = position + new Vector3Int(-1, 0, 0);
-        Vector3Int northPos = position + new Vector3Int(0, 1, 0);
-        Vector3Int southPos = position + new Vector3Int(0, -1, 0);
+        Vector3Int eastPos = position + Vector3Int.right;
+        Vector3Int westPos = position + Vector3Int.left;
+        Vector3Int northPos = position + Vector3Int.up;
+        Vector3Int southPos = position + Vector3Int.down;
 
         if(tileMap.GetTile(northPos) != null)
         {
@@ -311,93 +527,14 @@ public class TileDrawer
             result = result | 0x000008;
         }
 
-        tileMap.SetTile(position, positions[result]);
+        if (tileMap.GetTile(position) != null)
+        {
+            tileMap.SetTile(position, positions[result]);
+        }
     }
 
     public Vector3Int GetTileCoordinates(Vector3 worldCoordinates)
     {
         return tileMap.WorldToCell(worldCoordinates);
-    }
-
-    public System.Collections.Generic.List<Vector3Int> GrowTile(Vector3Int location, Vector3Int minBounds, Vector3Int maxBounds)
-    {
-        System.Collections.Generic.List<Vector3Int> result = new System.Collections.Generic.List<Vector3Int>();
-        TileBase tile = tileMap.GetTile(location);
-
-        if (tile == single)
-        {
-            Vector3Int[] checkLocations =
-            {
-                location + new Vector3Int(-2, -1, 0),
-                location + new Vector3Int(-2, -2, 0),
-                location + new Vector3Int(-1, -2, 0),
-                location + new Vector3Int(0, -2, 0),
-                location + new Vector3Int(1, -2, 0),
-                location + new Vector3Int(2, -2, 0),
-                location + new Vector3Int(2, -1, 0),
-                location + new Vector3Int(2, 0, 0),
-                location + new Vector3Int(2, 1, 0),
-                location + new Vector3Int(2, 2, 0),
-                location + new Vector3Int(1, 2, 0),
-                location + new Vector3Int(0, 2, 0),
-                location + new Vector3Int(-1, 2, 0),
-                location + new Vector3Int(-2, 2, 0),
-                location + new Vector3Int(-2, 1, 0),
-                location + new Vector3Int(-2, 0, 0),
-                location + new Vector3Int(-2, -1, 0)
-            };
-
-            Vector3Int[] newLocations =
-            {
-                location + new Vector3Int(-1, -1, 0),
-                location + new Vector3Int(0, -1, 0),
-                location + new Vector3Int(1, -1, 0),
-                location + new Vector3Int(1, 0, 0),
-                location + new Vector3Int(1, 1, 0),
-                location + new Vector3Int(0, 1, 0),
-                location + new Vector3Int(-1, 1, 0),
-                location + new Vector3Int(-1, 0, 0),
-            };
-
-            for (int i = 0; i < 8; ++i)
-            {
-                int j = i << 1;
-                if(CanGrow(newLocations[i], minBounds, maxBounds) 
-                    && tileMap.GetTile(checkLocations[j]) == null
-                    && tileMap.GetTile(checkLocations[j + 1]) == null
-                    && tileMap.GetTile(checkLocations[j + 2]) == null)
-                {
-                    result.Add(newLocations[i]);
-                    tileMap.SetTile(newLocations[i], single);
-                }
-            }
-        }
-
-        return result;
-    }
-
-    private bool CanGrow(Vector3Int location, Vector3Int minBounds, Vector3Int maxBounds)
-    {
-        if(location.x < minBounds.x || location.y < minBounds.y || location.x > maxBounds.x || location.y > maxBounds.y)
-        {
-            return false;
-        }
-
-        return tileMap.GetTile(location) == null;
-    }
-
-    public void Finish(Rect rect)
-    {
-        Vector3Int min = GetTileCoordinates(new Vector3(rect.xMin, rect.yMin, 0.0f));
-        Vector3Int max = GetTileCoordinates(new Vector3(rect.xMax, rect.yMax, 0.0f));
-        Vector3Int location = min;
-
-        //for (location.y = min.y; location.y <= max.y; ++location.y)
-        //{
-        //    for (location.x = min.x; location.x <= max.x; ++location.x)
-        //    {
-        //        UpdateTile(location, false);
-        //    }
-        //}
     }
 }
