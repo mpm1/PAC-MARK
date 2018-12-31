@@ -62,22 +62,10 @@ public class EnvironmentGenerator : MonoBehaviour
         //Due to how the collider is not reseting, we will disable it to begin with and enable it after.
         Collider2D collider = tileDetails.tileMap.GetComponent<TilemapCollider2D>();
         collider.enabled = false;
-
-        tileDetails.Fill(min, max, tileDetails.single);
+        
         eDirection ghostDoor = GenerateGhostBox(out ghostMin, out ghostMax);
 
-        // Check which kind of symetry we need and set the min and max accordingly.
-        if(isVerticalMirror)
-        {
-            max.y = (max.y + min.y) >> 1;
-        }
-
-        if (isHorizontalMirror)
-        {
-            max.x = (max.x + min.x) >> 1;
-        }
-
-        GenerateMaze(min, max, ghostMax, ghostMin);
+        GenerateMaze(min, max, ghostMin, ghostMax);
         Finish();
 
         collider.enabled = true;
@@ -90,9 +78,9 @@ public class EnvironmentGenerator : MonoBehaviour
         Vector3Int max = tileDetails.GetTileCoordinates(new Vector3(rect.xMax, rect.yMax, 0.0f));
         Vector3Int location = min;
 
-        for (; location.y < max.y; ++location.y)
+        for (; location.y <= max.y; ++location.y)
         {
-            for(location.x = min.x; location.x < max.x; ++location.x)
+            for(location.x = min.x; location.x <= max.x; ++location.x)
             {
                 tileDetails.UpdateTile(location, false);
             }
@@ -113,219 +101,107 @@ public class EnvironmentGenerator : MonoBehaviour
         return doorDirection;
     }
 
-    private void GenerateMaze(Vector3Int min, Vector3Int max, Vector3Int ghostMax, Vector3Int ghostMin)
+    private void GenerateMaze(Vector3Int mapMin, Vector3Int mapMax, Vector3Int ghostMin, Vector3Int ghostMax)
     {
-        List<Vector3Int> walls = new List<Vector3Int>();
+        Vector3Int min = mapMin;
+        Vector3Int max = mapMax;
+
+        // Check which kind of symetry we need and set the min and max accordingly.
+        if (isVerticalMirror)
+        {
+            max.y = (max.y + min.y) >> 1;
+        }
+
+        if (isHorizontalMirror)
+        {
+            max.x = (max.x + min.x) >> 1;
+        }
+
+        Vector3Int[] border =
+        {
+            min,
+            new Vector3Int(max.x, min.y, min.z),
+            max,
+            new Vector3Int(min.x, max.y, max.z)
+        };
+
+        for (int i = 0; i < 4; ++i)
+        {
+            int j = i == 3 ? 0 : i + 1;
+
+            CreateWall(border[i], border[j], mapMin, mapMax, ghostMin, ghostMax);
+        }
+        
+        GenerateChamber(min, max, mapMin, mapMax, ghostMin, ghostMax);
+    }
+
+    private Vector3Int GenerateSplitLocation(Vector3Int min, Vector3Int max, Vector3Int mapMin, Vector3Int mapMax, Vector3Int ghostMin, Vector3Int ghostMax)
+    {
         Vector3Int delta = max - min;
 
-        // Pick the start location along the wall
-        Vector3Int cellIncr;
-        if (isVerticalMirror)
-        {
-            cellIncr = new Vector3Int(Random.Range(1, delta.x), 0, 0);
-            PlaceHall(min + cellIncr, walls, min, max);
-        }
+        // Only get even locations
+        Vector3Int split = min + new Vector3Int(Random.Range(1, delta.x >> 1) << 1, Random.Range(1, delta.y >> 1) << 1, 0);
 
-        if (isHorizontalMirror)
-        {
-            cellIncr = new Vector3Int(0, Random.Range(1, delta.y), 0);
-            PlaceHall(min + cellIncr, walls, min, max);
-        }
+        CreateWall(new Vector3Int(min.x, split.y, min.z), new Vector3Int(max.x, split.y, max.x), mapMin, mapMax, ghostMin, ghostMax);
+        CreateWall(new Vector3Int(split.x, min.y, min.z), new Vector3Int(split.x, max.y, max.x), mapMin, mapMax, ghostMin, ghostMax);
 
-        while (walls.Count > 0)
-        {
-            int i = Random.Range(0, walls.Count);
-            if (CanRemoveWall(walls[i], min, max))
-            {
-                PlaceHall(walls[i], walls, min, max);
-            }
-
-            walls.RemoveAt(i);
-        }
+        return split;
     }
 
-    private bool CanRemoveWall(Vector3Int location, Vector3Int min, Vector3Int max)
+    private void RemoveWall(Vector3Int location, Vector3Int mapMin, Vector3Int mapMax)
     {
-        TileBase tile = tileDetails.tileMap.GetTile(location);
+        tileDetails.tileMap.SetTile(location, null);
 
-        if(tile == null)
-        {
-            return false;
-        }
-
-        /*if(location.x == min.x || location.y == min.y)
-        {
-            return false;
-        }
-
-        if (location.x == max.x && !isHorizontalMirror)
-        {
-            return false;
-        }
-
-        if(location.y == max.y && !isVerticalMirror)
-        {
-            return false;
-        }*/
-
-        // Check Vertical
-        int hallCount = 0;
-        if(tileDetails.tileMap.GetTile(location + Vector3Int.up) == null)
-        {
-            ++hallCount;
-        }
-
-        if(tileDetails.tileMap.GetTile(location + Vector3Int.down) == null)
-        {
-            ++hallCount;
-
-            if(hallCount > 2) {
-                return false;
-            }
-        }
-
-        if(tileDetails.tileMap.GetTile(location + Vector3Int.right) == null)
-        {
-            ++hallCount;
-
-            if (hallCount > 2)
-            {
-                return false;
-            }
-        }
-
-        if(tileDetails.tileMap.GetTile(location + Vector3Int.left) == null)
-        {
-            ++hallCount;
-
-            if (hallCount > 2)
-            {
-                return false;
-            }
-        }
-
-        if (tileDetails.tileMap.GetTile(location + Vector3Int.up + Vector3Int.left) == null)
-        {
-            ++hallCount;
-
-            if (hallCount > 2)
-            {
-                return false;
-            }
-        }
-
-        if (tileDetails.tileMap.GetTile(location + Vector3Int.down + Vector3Int.right) == null)
-        {
-            ++hallCount;
-
-            if (hallCount > 2)
-            {
-                return false;
-            }
-        }
-
-        if (tileDetails.tileMap.GetTile(location + Vector3Int.right + Vector3Int.up) == null)
-        {
-            ++hallCount;
-
-            if (hallCount > 2)
-            {
-                return false;
-            }
-        }
-
-        if (tileDetails.tileMap.GetTile(location + Vector3Int.left + Vector3Int.down) == null)
-        {
-            ++hallCount;
-
-            if (hallCount > 2)
-            {
-                return false;
-            }
-        }
-
-        return true;
+        //TODO: Mirroring
     }
 
-    private bool PlaceHall(Vector3Int location, List<Vector3Int> walls, Vector3Int min, Vector3Int max)
+    private void CreateWall(Vector3Int start, Vector3Int end, Vector3Int mapMin, Vector3Int mapMax, Vector3Int ghostMin, Vector3Int ghostMax)
     {
-        RemoveWall(location, walls, min, max);
+        //TODO check if we will intersect with the ghost box;
 
-        // Add corresponding walls if we are on the edge
-        if (location.x == min.x)
-        {
-            Vector3Int newLocation = location;
-            newLocation.x = max.x;
-            RemoveWall(newLocation, walls, min, max);
-        }
-        else if(location.y == min.y)
-        {
-            Vector3Int newLocation = location;
-            newLocation.y = max.y;
-            RemoveWall(newLocation, walls, min, max);
-        }
+        tileDetails.DrawLine(start, end);
 
-        return true;
+        //TODO: Mirroring
     }
 
-    private void RemoveWall(Vector3Int location, List<Vector3Int> walls, Vector3Int min, Vector3Int max)
+    private void GenerateChamber(Vector3Int min, Vector3Int max, Vector3Int mapMin, Vector3Int mapMax, Vector3Int ghostMin, Vector3Int ghostMax)
     {
-        tileDetails.RemoveWall(location);
-
-        if(location.x > min.x)
+        if(min.x > max.x || min.y > max.y)
         {
-            Vector3Int checkWall = location + Vector3Int.left;
-
-            if (tileDetails.tileMap.GetTile(checkWall) != null)
-            {
-                walls.Add(checkWall);
-            }
+            return;
         }
 
-        if (location.y > min.y)
+        Vector3Int delta = max - min;
+        if (delta.x < 3 || delta.y < 3)
         {
-            Vector3Int checkWall = location + Vector3Int.down;
-
-            if (tileDetails.tileMap.GetTile(checkWall) != null)
-            {
-                walls.Add(checkWall);
-            }
+            return;
         }
 
-        if (location.x < max.x)
-        {
-            Vector3Int checkWall = location + Vector3Int.right;
+        Vector3Int split = GenerateSplitLocation(min, max, mapMin, mapMax, ghostMin, ghostMax);
 
-            if (tileDetails.tileMap.GetTile(checkWall) != null)
-            {
-                walls.Add(checkWall);
-            }
-        }
+        // Remove the neccisary walls.
+        Vector3Int top = max;
+        Vector3Int bottom = min;
+        Vector3Int left = min;
+        Vector3Int right = max;
 
-        if (location.y < max.y)
-        {
-            Vector3Int checkWall = location + Vector3Int.up;
+        top.x = split.x + (Random.value > 0.5 ? 1 : -1);
+        bottom.x = top.x;
 
-            if (tileDetails.tileMap.GetTile(checkWall) != null)
-            {
-                walls.Add(checkWall);
-            }
-        }
+        left.y = split.y + (Random.value > 0.5 ? 1 : -1);
+        right.y = top.y;
+        
+        RemoveWall(top, mapMin, mapMax);
+        RemoveWall(bottom, mapMin, mapMax);
+        RemoveWall(left, mapMin, mapMax);
+        RemoveWall(right, mapMin, mapMax);
 
-        // Mirror results
-        if (isVerticalMirror)
-        {
-            Vector3Int newLocation = location;
-            newLocation.y = (max.y << 1) - location.y;
-            tileDetails.RemoveWall(newLocation); 
-        }
+        // Find the new intersection
+        GenerateChamber(new Vector3Int(min.x, split.y, min.z), new Vector3Int(split.x, max.y, min.z), mapMin, mapMax, ghostMin, ghostMax);
+        GenerateChamber(split, max, mapMin, mapMax, ghostMin, ghostMax);
+        GenerateChamber(new Vector3Int(split.x, min.y, min.z), new Vector3Int(max.x, split.y, min.z), mapMin, mapMax, ghostMin, ghostMax);
+        GenerateChamber(min, split, mapMin, mapMax, ghostMin, ghostMax);
 
-        if (isHorizontalMirror)
-        {
-            Vector3Int newLocation = location;
-            newLocation.x = (max.x << 1) - location.x;
-            tileDetails.RemoveWall(newLocation);
-        }
     }
 
     private void OnDrawGizmos()
