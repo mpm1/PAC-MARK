@@ -63,7 +63,7 @@ public class EnvironmentGenerator : MonoBehaviour
         Collider2D collider = tileDetails.tileMap.GetComponent<TilemapCollider2D>();
         collider.enabled = false;
 
-        tileDetails.Fill(min, max, tileDetails.single);
+        Fill(min, max);
         eDirection ghostDoor = GenerateGhostBox(out ghostMin, out ghostMax);
 
         Vector3Int startLocation = new Vector3Int((ghostMin.x + ghostMax.x >> 1), ghostMin.y - 1, min.z);
@@ -72,6 +72,11 @@ public class EnvironmentGenerator : MonoBehaviour
         Finish();
 
         collider.enabled = true;
+    }
+
+    private void Fill(Vector3Int mapMin, Vector3Int mapMax)
+    {
+		tileDetails.Fill(mapMin, mapMax, tileDetails.single);
     }
 
     private void Finish()
@@ -115,7 +120,7 @@ public class EnvironmentGenerator : MonoBehaviour
 
         RemoveWall(startLocation, min, max, mapMin, mapMax, walls);
 
-        while(walls.Count > 0)
+        while (walls.Count > 0)
         {
             int i = Random.Range(0, walls.Count);
             RemoveWall(walls[i], min, max, mapMin, mapMax, walls);
@@ -145,11 +150,18 @@ public class EnvironmentGenerator : MonoBehaviour
         int holeCount = 0;
         int checkMax = 1;
 
-        if(location.x == min.x || location.y == min.y || location.x == max.x || location.y == max.y)
+        // TODO evaluate halls on the edge properly.
+        if (location.x == mapMin.x || location.x == mapMax.x)
+        {
+            if (location.y != mapMin.y || location.y != mapMax.y)
+            {
+                checkMax = 2;
+            }
+		}else if(location.y == mapMin.y || location.y == mapMax.y)
         {
             checkMax = 2;
         }
-
+		
         for(int i = 0; i < 4; ++i)
         {
             if(tileDetails.tileMap.GetTile(sideWalls[i]) != null)
@@ -205,7 +217,11 @@ public class EnvironmentGenerator : MonoBehaviour
         {
             if(tileDetails.tileMap.GetTile(wall) != null)
             {
-                walls.Add(wall);
+                if (wall.x >= min.x || wall.x <= max.x || wall.y >= min.y || wall.y <= max.y)
+                {
+                    walls.Add(wall);
+                }
+                
             }
         }
     }

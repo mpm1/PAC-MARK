@@ -634,26 +634,26 @@ MonoBehaviour:
   minLargePellets: 2
   seed: 24
   mirroring: 1
-  ghostBoxScale: {x: 10, y: 6, z: 0}
+  ghostBoxScale: {x: 9, y: 6, z: 0}
   ghostBoxDoorSize: 0
   tileDetails:
     tileMap: {fileID: 265582019}
-    vertical: {fileID: 11400000, guid: ebc59c3b6d83d09429ab81e09bb59641, type: 2}
-    horizontal: {fileID: 11400000, guid: 4ac5d723f5049dc458d36d37ff6e8ca3, type: 2}
-    north: {fileID: 11400000, guid: f1871351e0f5a974f88b5641056a5711, type: 2}
-    south: {fileID: 11400000, guid: 423a87bce8d7fed4091235bc3e25fac7, type: 2}
-    east: {fileID: 11400000, guid: 10a3745f045789b4bbd1ad5e89536756, type: 2}
-    west: {fileID: 11400000, guid: 6a3f5b16305337944b3d051bc3c8ef6f, type: 2}
-    northEast: {fileID: 11400000, guid: 9b3e09330adaf8f44bd3d68f82bb5180, type: 2}
-    northWest: {fileID: 11400000, guid: 98270fa2146879c47aef6bc25638437f, type: 2}
-    southEast: {fileID: 11400000, guid: 4bddccec50abe2e479999a938994b382, type: 2}
-    southWest: {fileID: 11400000, guid: 40e469c241ceead439f5edeb36298b8a, type: 2}
-    verticalEast: {fileID: 11400000, guid: f5bd47d595aa78d42829096e8760bd48, type: 2}
-    verticalWest: {fileID: 11400000, guid: 2a4bbf68b6ab39b47a9f7d4bf364d760, type: 2}
-    horizontalNorth: {fileID: 11400000, guid: b82fcf53c6df09546aaa490f8f150d81, type: 2}
-    horizontalSouth: {fileID: 11400000, guid: 28d6874a3b53490438f68dc8ee547749, type: 2}
-    all: {fileID: 11400000, guid: c370425a836d50f438f36756ed9bd1b2, type: 2}
-    single: {fileID: 11400000, guid: ec2b1bd61bfac114698e2588d042fe6b, type: 2}
+    vertical: {fileID: 11400000, guid: 5f20430126f811d499894bc61d803225, type: 2}
+    horizontal: {fileID: 11400000, guid: 5f20430126f811d499894bc61d803225, type: 2}
+    north: {fileID: 11400000, guid: 5f20430126f811d499894bc61d803225, type: 2}
+    south: {fileID: 11400000, guid: 5f20430126f811d499894bc61d803225, type: 2}
+    east: {fileID: 11400000, guid: 5f20430126f811d499894bc61d803225, type: 2}
+    west: {fileID: 11400000, guid: 5f20430126f811d499894bc61d803225, type: 2}
+    northEast: {fileID: 11400000, guid: 5f20430126f811d499894bc61d803225, type: 2}
+    northWest: {fileID: 11400000, guid: 5f20430126f811d499894bc61d803225, type: 2}
+    southEast: {fileID: 11400000, guid: 5f20430126f811d499894bc61d803225, type: 2}
+    southWest: {fileID: 11400000, guid: 5f20430126f811d499894bc61d803225, type: 2}
+    verticalEast: {fileID: 11400000, guid: 5f20430126f811d499894bc61d803225, type: 2}
+    verticalWest: {fileID: 11400000, guid: 5f20430126f811d499894bc61d803225, type: 2}
+    horizontalNorth: {fileID: 11400000, guid: 5f20430126f811d499894bc61d803225, type: 2}
+    horizontalSouth: {fileID: 11400000, guid: 5f20430126f811d499894bc61d803225, type: 2}
+    all: {fileID: 11400000, guid: 5f20430126f811d499894bc61d803225, type: 2}
+    single: {fileID: 11400000, guid: 5f20430126f811d499894bc61d803225, type: 2}
 --- !u!1 &1295642411
 GameObject:
   m_ObjectHideFlags: 0
