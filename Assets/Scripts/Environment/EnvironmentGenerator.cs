@@ -74,6 +74,57 @@ public class EnvironmentGenerator : MonoBehaviour
         collider.enabled = true;
     }
 
+    private void GeneratePellets(Vector3Int playerStart, Vector3Int min, Vector3Int max, Vector3Int mapMin, Vector3Int mapMax, Vector3Int ghostMin, Vector3Int ghostMax)
+    {
+        Vector3Int location = min;
+
+        Vector3 minWorld = tileDetails.GetWorldCoordinates(mapMin);
+        Vector3 maxWorld = tileDetails.GetWorldCoordinates(mapMax);
+
+        for(; location.y <= max.y; ++location.y)
+        {
+            for(location.x = min.x; location.x <= max.x; ++location.x)
+            {
+                if (tileDetails.tileMap.GetTile(location) == null && location != playerStart 
+                    && !(location.x > ghostMin.x && location.x < ghostMax.x && location.y > ghostMin.y && location.y < ghostMax.y))
+                {
+                    PlacePellet(tileDetails.GetWorldCoordinates(location), minWorld, maxWorld);
+                }
+            }
+        }
+        
+    }
+
+    private void PlacePellet(Vector3 location, Vector3 minWorld, Vector3 maxWorld)
+    {
+        tileDetails.AddObject(smallPellet, location);
+
+        // Mirroring
+        Vector3 reflect = minWorld + maxWorld;
+
+        if (isVerticalMirror)
+        {
+            Vector3 newLocation = location;
+            newLocation.y = reflect.y - location.y;
+            tileDetails.AddObject(smallPellet, newLocation);
+        }
+
+        if (isHorizontalMirror)
+        {
+            Vector3 newLocation = location;
+            newLocation.x = reflect.x - location.x;
+            tileDetails.AddObject(smallPellet, newLocation);
+        }
+
+        if (mirroring == eMirror.Both)
+        {
+            Vector3 newLocation = location;
+            newLocation.y = reflect.y - location.y;
+            newLocation.x = reflect.x - location.x;
+            tileDetails.AddObject(smallPellet, newLocation);
+        }
+    }
+
     private void Fill(Vector3Int mapMin, Vector3Int mapMax)
     {
 		tileDetails.Fill(mapMin, mapMax, tileDetails.single);
@@ -117,7 +168,17 @@ public class EnvironmentGenerator : MonoBehaviour
         //TODO min and max for mirroring.
         Vector3Int min = mapMin;
         Vector3Int max = mapMax;
+        if (isVerticalMirror)
+        {
+            max.y = (min.y + max.y) >> 1;
+        }
 
+        if (isHorizontalMirror)
+        {
+            max.x = (min.x + max.x) >> 1;
+        }
+
+        // Start removing walls
         RemoveWall(startLocation, min, max, mapMin, mapMax, walls);
 
         while (walls.Count > 0)
@@ -126,6 +187,8 @@ public class EnvironmentGenerator : MonoBehaviour
             RemoveWall(walls[i], min, max, mapMin, mapMax, walls);
             walls.RemoveAt(i);
         }
+
+        GeneratePellets(startLocation, min, max, mapMax, mapMax, ghostMin, ghostMax);
     }
 
     private void RemoveWall(Vector3Int location, Vector3Int min, Vector3Int max, Vector3Int mapMin, Vector3Int mapMax, List<Vector3Int> walls)
@@ -477,5 +540,16 @@ public class TileDrawer
     public Vector3Int GetTileCoordinates(Vector3 worldCoordinates)
     {
         return tileMap.WorldToCell(worldCoordinates);
+    }
+
+    public Vector3 GetWorldCoordinates(Vector3Int tileCoordinates)
+    {
+        return tileMap.CellToWorld(tileCoordinates);
+    }
+
+    public void AddObject(GameObject objectPrefab, Vector3 worldLocation)
+    {
+        GameObject obj = Object.Instantiate(objectPrefab, tileMap.transform.parent);
+        obj.transform.position = worldLocation;
     }
 }

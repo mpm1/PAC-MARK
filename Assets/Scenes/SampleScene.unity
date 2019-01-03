@@ -628,12 +628,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e72504d98aa75da4f9354bb2446d1771, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  smallPellet: {fileID: 0}
+  smallPellet: {fileID: 5915294600694721298, guid: d6b879df0a276e54b97e870eae9d8e2f,
+    type: 3}
   largePellet: {fileID: 0}
   maxLargePellets: 6
   minLargePellets: 2
   seed: 24
-  mirroring: 1
+  mirroring: 3
   ghostBoxScale: {x: 9, y: 6, z: 0}
   ghostBoxDoorSize: 0
   tileDetails:
@@ -804,7 +805,7 @@ PrefabInstance:
     - target: {fileID: 937124671817345002, guid: b9f3370e8004c0449ad37ed5b59542fb,
         type: 3}
       propertyPath: speed
-      value: 4
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 937124671817345001, guid: b9f3370e8004c0449ad37ed5b59542fb,
         type: 3}

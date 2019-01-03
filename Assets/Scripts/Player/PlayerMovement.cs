@@ -15,8 +15,20 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        float h = Input.GetAxisRaw("Horizontal");
-        float v = Input.GetAxisRaw("Vertical");
+        float h = Input.GetAxis("Horizontal");
+        float v = Input.GetAxis("Vertical");
+
+        //TODO check if we can go in the direction selected.
+        if(Mathf.Abs(h) < Mathf.Abs(v))
+        {
+            h = 0.0f;
+            v = Input.GetAxisRaw("Vertical");
+        }
+        else
+        {
+            h = Input.GetAxisRaw("Horizontal");
+            v = 0.0f;
+        }
 
         Move(h, v);
     }
