@@ -74,12 +74,9 @@ public class EnvironmentGenerator : MonoBehaviour
         collider.enabled = true;
     }
 
-    private void GeneratePellets(Vector3Int playerStart, Vector3Int min, Vector3Int max, Vector3Int mapMin, Vector3Int mapMax, Vector3Int ghostMin, Vector3Int ghostMax)
+    private void GeneratePellets(Vector3Int playerStart, Vector3Int min, Vector3Int max, Vector3Int ghostMin, Vector3Int ghostMax)
     {
         Vector3Int location = min;
-
-        Vector3 minWorld = tileDetails.GetWorldCoordinates(mapMin);
-        Vector3 maxWorld = tileDetails.GetWorldCoordinates(mapMax);
 
         for(; location.y <= max.y; ++location.y)
         {
@@ -88,40 +85,38 @@ public class EnvironmentGenerator : MonoBehaviour
                 if (tileDetails.tileMap.GetTile(location) == null && location != playerStart 
                     && !(location.x > ghostMin.x && location.x < ghostMax.x && location.y > ghostMin.y && location.y < ghostMax.y))
                 {
-                    PlacePellet(tileDetails.GetWorldCoordinates(location), minWorld, maxWorld);
+                    PlacePellet(location, max);
                 }
             }
         }
         
     }
 
-    private void PlacePellet(Vector3 location, Vector3 minWorld, Vector3 maxWorld)
+    private void PlacePellet(Vector3Int location, Vector3Int reflect)
     {
-        tileDetails.AddObject(smallPellet, location);
+        tileDetails.AddObject(smallPellet, tileDetails.GetWorldCoordinates(location));
 
         // Mirroring
-        Vector3 reflect = minWorld + maxWorld;
-
         if (isVerticalMirror)
         {
-            Vector3 newLocation = location;
+            Vector3Int newLocation = location;
             newLocation.y = reflect.y - location.y;
-            tileDetails.AddObject(smallPellet, newLocation);
+            tileDetails.AddObject(smallPellet, tileDetails.GetWorldCoordinates(newLocation));
         }
 
         if (isHorizontalMirror)
         {
-            Vector3 newLocation = location;
+            Vector3Int newLocation = location;
             newLocation.x = reflect.x - location.x;
-            tileDetails.AddObject(smallPellet, newLocation);
+            tileDetails.AddObject(smallPellet, tileDetails.GetWorldCoordinates(newLocation));
         }
 
         if (mirroring == eMirror.Both)
         {
-            Vector3 newLocation = location;
+            Vector3Int newLocation = location;
             newLocation.y = reflect.y - location.y;
             newLocation.x = reflect.x - location.x;
-            tileDetails.AddObject(smallPellet, newLocation);
+            tileDetails.AddObject(smallPellet, tileDetails.GetWorldCoordinates(newLocation));
         }
     }
 
@@ -188,7 +183,7 @@ public class EnvironmentGenerator : MonoBehaviour
             walls.RemoveAt(i);
         }
 
-        GeneratePellets(startLocation, min, max, mapMax, mapMax, ghostMin, ghostMax);
+        GeneratePellets(startLocation, min, max, ghostMin, ghostMax);
     }
 
     private void RemoveWall(Vector3Int location, Vector3Int min, Vector3Int max, Vector3Int mapMin, Vector3Int mapMax, List<Vector3Int> walls)
