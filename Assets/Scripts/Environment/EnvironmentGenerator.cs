@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-public class EnvironmentGenerator : MonoBehaviour
+public class EnvironmentGenerator : Environment
 {
     private enum eDirection { East = 0x01, North = 0x02, South = 0x04, West = 0x08, All = 0x0F};
     public enum eMirror {
@@ -53,7 +53,7 @@ public class EnvironmentGenerator : MonoBehaviour
         int pelletCount = Random.Range(minLargePellets, maxLargePellets);
 
         // Find the size of the map
-        Rect rect = new Rect(transform.position - (transform.lossyScale / 2.0f), transform.lossyScale);
+        Rect rect = GetContainingRect();
         Vector3Int min = tileDetails.GetTileCoordinates(new Vector3(rect.xMin, rect.yMin, 0.0f));
         Vector3Int max = tileDetails.GetTileCoordinates(new Vector3(rect.xMax, rect.yMax, 0.0f));
 
@@ -188,14 +188,6 @@ public class EnvironmentGenerator : MonoBehaviour
 
     private void RemoveWall(Vector3Int location, Vector3Int min, Vector3Int max, Vector3Int mapMin, Vector3Int mapMax, List<Vector3Int> walls)
     {
-        Vector3Int[] checkWalls =
-        {
-            location + Vector3Int.up + Vector3Int.up,
-            location + Vector3Int.right + Vector3Int.right,
-            location + Vector3Int.down + Vector3Int.down,
-            location + Vector3Int.left + Vector3Int.left
-        };
-
         Vector3Int[] sideWalls =
         {
             location + Vector3Int.up,
@@ -206,41 +198,33 @@ public class EnvironmentGenerator : MonoBehaviour
 
         // Check if we can remove the wall
         int holeCount = 0;
-        int checkMax = 1;
 
-        // TODO evaluate halls on the edge properly.
-        if (location.x == mapMin.x || location.x == mapMax.x)
+        Vector3Int dist = mapMax - mapMin;
+        dist.x = Mathf.Abs(dist.x);
+        dist.y = Mathf.Abs(dist.y);
+
+        for (int i = 0; i < 4; ++i)
         {
-            if (location.y != mapMin.y || location.y != mapMax.y)
-            {
-                checkMax = 2;
-            }
-		}else if(location.y == mapMin.y || location.y == mapMax.y)
-        {
-            checkMax = 2;
-        }
-		
-        for(int i = 0; i < 4; ++i)
-        {
-            if(tileDetails.tileMap.GetTile(sideWalls[i]) != null)
-            {
-                if (checkWalls[i].x >= mapMin.x && checkWalls[i].y >= mapMin.y && checkWalls[i].x <= mapMax.x && checkWalls[i].y <= mapMax.y)
-                {
-                    if (tileDetails.tileMap.GetTile(checkWalls[i]) == null)
-                    {
-                        ++holeCount;
-                    }
-                }
-            }
-            else
+            Vector3Int checkVal = sideWalls[i];
+            //while (checkVal.y < mapMin.y) { checkVal.y += dist.y; }
+            //while (checkVal.y > mapMax.y) { checkVal.y -= dist.y; }
+            //while (checkVal.x < mapMin.x) { checkVal.x += dist.x; }
+            //while (checkVal.x > mapMax.x) { checkVal.x -= dist.x; }
+            if (checkVal.y < mapMin.y) { continue; }
+            if (checkVal.y > mapMax.y) { continue; }
+            if (checkVal.x < mapMin.x) { continue; }
+            if (checkVal.x > mapMax.x) { continue; }
+            TileBase tile = tileDetails.tileMap.GetTile(checkVal);
+
+            if(tile == null)
             {
                 ++holeCount;
             }
+        }
 
-            if(holeCount > checkMax)
-            {
-                return;
-            }
+        if(holeCount > 1)
+        {
+            return;
         }
 
         // Remove the wall
@@ -271,18 +255,116 @@ public class EnvironmentGenerator : MonoBehaviour
         }
 
         // Add surrounding walls to the list
-        foreach(Vector3Int wall in sideWalls)
+        foreach (Vector3Int wall in sideWalls)
         {
-            if(tileDetails.tileMap.GetTile(wall) != null)
+            if (tileDetails.tileMap.GetTile(wall) != null)
             {
                 if (wall.x >= min.x || wall.x <= max.x || wall.y >= min.y || wall.y <= max.y)
                 {
                     walls.Add(wall);
                 }
-                
+
             }
         }
     }
+
+    //  private void RemoveWall(Vector3Int location, Vector3Int min, Vector3Int max, Vector3Int mapMin, Vector3Int mapMax, List<Vector3Int> walls)
+    //  {
+    //      Vector3Int[] checkWalls =
+    //      {
+    //          location + Vector3Int.up + Vector3Int.up,
+    //          location + Vector3Int.right + Vector3Int.right,
+    //          location + Vector3Int.down + Vector3Int.down,
+    //          location + Vector3Int.left + Vector3Int.left
+    //      };
+
+    //      Vector3Int[] sideWalls =
+    //      {
+    //          location + Vector3Int.up,
+    //          location + Vector3Int.right,
+    //          location + Vector3Int.down,
+    //          location + Vector3Int.left
+    //      };
+
+    //      // Check if we can remove the wall
+    //      int holeCount = 0;
+    //      int checkMax = 1;
+
+    //      // TODO evaluate halls on the edge properly.
+    //      if (location.x == mapMin.x || location.x == mapMax.x)
+    //      {
+    //          if (location.y != mapMin.y || location.y != mapMax.y)
+    //          {
+    //              checkMax = 2;
+    //          }
+    //}else if(location.y == mapMin.y || location.y == mapMax.y)
+    //      {
+    //          checkMax = 2;
+    //      }
+
+    //      for(int i = 0; i < 4; ++i)
+    //      {
+    //          if(tileDetails.tileMap.GetTile(sideWalls[i]) != null)
+    //          {
+    //              if (checkWalls[i].x >= mapMin.x && checkWalls[i].y >= mapMin.y && checkWalls[i].x <= mapMax.x && checkWalls[i].y <= mapMax.y)
+    //              {
+    //                  if (tileDetails.tileMap.GetTile(checkWalls[i]) == null)
+    //                  {
+    //                      ++holeCount;
+    //                  }
+    //              }
+    //          }
+    //          else
+    //          {
+    //              ++holeCount;
+    //          }
+
+    //          if(holeCount > checkMax)
+    //          {
+    //              return;
+    //          }
+    //      }
+
+    //      // Remove the wall
+    //      Vector3Int reflect = mapMin + mapMax;
+    //      tileDetails.tileMap.SetTile(location, null);
+
+    //      // Mirroring
+    //      if (isVerticalMirror)
+    //      {
+    //          Vector3Int newLocation = location;
+    //          newLocation.y = reflect.y - location.y;
+
+    //          tileDetails.tileMap.SetTile(newLocation, null);
+    //      }
+
+    //      if (isHorizontalMirror)
+    //      {
+    //          Vector3Int newLocation = location;
+    //          newLocation.x = reflect.x - location.x;
+
+    //          tileDetails.tileMap.SetTile(newLocation, null);
+    //      }
+
+    //      if (mirroring == eMirror.Both)
+    //      {
+    //          Vector3Int reflectDir = reflect * (Vector3Int.right + Vector3Int.up);
+    //          tileDetails.tileMap.SetTile(reflectDir - location, null);
+    //      }
+
+    //      // Add surrounding walls to the list
+    //      foreach(Vector3Int wall in sideWalls)
+    //      {
+    //          if(tileDetails.tileMap.GetTile(wall) != null)
+    //          {
+    //              if (wall.x >= min.x || wall.x <= max.x || wall.y >= min.y || wall.y <= max.y)
+    //              {
+    //                  walls.Add(wall);
+    //              }
+
+    //          }
+    //      }
+    //  }
 
     private void CreateWall(Vector3Int start, Vector3Int end, Vector3Int mapMin, Vector3Int mapMax, Vector3Int ghostMin, Vector3Int ghostMax)
     {
@@ -327,10 +409,9 @@ public class EnvironmentGenerator : MonoBehaviour
         return (input & (int)direction) == (int)direction;
     }
 
-    private void OnDrawGizmos()
+    protected override void OnDrawGizmos()
     {
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireCube(transform.position, transform.localScale);
+        base.OnDrawGizmos();
 
         Gizmos.DrawWireCube(transform.position, ghostBoxScale);
     }

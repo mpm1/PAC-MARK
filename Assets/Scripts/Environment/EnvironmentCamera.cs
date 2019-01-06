@@ -17,7 +17,7 @@ public class EnvironmentCamera : MonoBehaviour
     }
 
     // Update is called once per frame
-    private void FixedUpdate()
+    private void LateUpdate()
     {
         Vector3 newPosition;
         float zoom;

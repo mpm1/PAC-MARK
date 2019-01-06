@@ -802,11 +802,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
-    - target: {fileID: 937124671817345002, guid: b9f3370e8004c0449ad37ed5b59542fb,
-        type: 3}
-      propertyPath: speed
-      value: 6
-      objectReference: {fileID: 0}
     - target: {fileID: 937124671817345001, guid: b9f3370e8004c0449ad37ed5b59542fb,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -865,16 +860,73 @@ PrefabInstance:
     - target: {fileID: 937124671817345001, guid: b9f3370e8004c0449ad37ed5b59542fb,
         type: 3}
       propertyPath: m_LocalScale.x
-      value: 5
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 937124671817345001, guid: b9f3370e8004c0449ad37ed5b59542fb,
         type: 3}
       propertyPath: m_LocalScale.y
-      value: 5
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1275354355, guid: b9f3370e8004c0449ad37ed5b59542fb, type: 3}
       propertyPath: scoreText
       value: 
       objectReference: {fileID: 573309794}
+    - target: {fileID: 937124671817345000, guid: b9f3370e8004c0449ad37ed5b59542fb,
+        type: 3}
+      propertyPath: m_Color.r
+      value: 0.98765564
+      objectReference: {fileID: 0}
+    - target: {fileID: 937124671817345000, guid: b9f3370e8004c0449ad37ed5b59542fb,
+        type: 3}
+      propertyPath: m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 937124671817345000, guid: b9f3370e8004c0449ad37ed5b59542fb,
+        type: 3}
+      propertyPath: m_Color.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 937124671817345000, guid: b9f3370e8004c0449ad37ed5b59542fb,
+        type: 3}
+      propertyPath: m_FlipX
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 937124671817345003, guid: b9f3370e8004c0449ad37ed5b59542fb,
+        type: 3}
+      propertyPath: m_Constraints
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 937124671817345003, guid: b9f3370e8004c0449ad37ed5b59542fb,
+        type: 3}
+      propertyPath: m_Interpolate
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 937124671817345003, guid: b9f3370e8004c0449ad37ed5b59542fb,
+        type: 3}
+      propertyPath: m_UseAutoMass
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 937124671817345003, guid: b9f3370e8004c0449ad37ed5b59542fb,
+        type: 3}
+      propertyPath: m_Mass
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 937124671817345003, guid: b9f3370e8004c0449ad37ed5b59542fb,
+        type: 3}
+      propertyPath: m_Simulated
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1275354361, guid: b9f3370e8004c0449ad37ed5b59542fb, type: 3}
+      propertyPath: m_Radius
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1199621347, guid: b9f3370e8004c0449ad37ed5b59542fb, type: 3}
+      propertyPath: m_UpdateMode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1199621347, guid: b9f3370e8004c0449ad37ed5b59542fb, type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b9f3370e8004c0449ad37ed5b59542fb, type: 3}
