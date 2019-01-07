@@ -40,6 +40,8 @@ public class EnvironmentGenerator : Environment
     [Header("Tile Details")]
     public TileDrawer tileDetails;
 
+    private List<Node> nodes;
+
     private void Awake()
     {
         tileDetails.Init();
@@ -414,6 +416,17 @@ public class EnvironmentGenerator : Environment
         base.OnDrawGizmos();
 
         Gizmos.DrawWireCube(transform.position, ghostBoxScale);
+    }
+
+    public override IList<Node> GetNodes()
+    {
+        return nodes.AsReadOnly();
+    }
+
+    public override Node GetClosetNode(Vector2 pos)
+    {
+        // TODO sort the nodes
+        return nodes[0];
     }
 }
 

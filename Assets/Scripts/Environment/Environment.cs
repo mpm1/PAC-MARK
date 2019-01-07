@@ -48,4 +48,26 @@ public abstract class Environment : MonoBehaviour
             body.position = location;
         }
     }
+
+    public abstract IList<Node> GetNodes();
+    public abstract Node GetClosetNode(Vector2 pos);
+    
+    public struct Node
+    {
+        /// <summary>
+        /// The location in world space for this node.
+        /// </summary>
+        public Vector2 node;
+        
+        /// <summary>
+        /// Unobstructed paths to other nodes.
+        /// </summary>
+        public IList<Node> connections;
+
+        public Node(Vector2 node)
+        {
+            this.node = node;
+            connections = new List<Node>();
+        }
+    }
 }

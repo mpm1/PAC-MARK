@@ -8,7 +8,7 @@ public class PlayerMovement : MonoBehaviour
 
     private new Rigidbody2D rigidbody;
     private Animator animator;
-    private SpriteRenderer renderer;
+    private new SpriteRenderer renderer;
     private Environment environment;
 
     private void Awake()
