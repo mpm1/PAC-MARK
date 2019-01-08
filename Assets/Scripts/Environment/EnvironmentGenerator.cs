@@ -74,6 +74,8 @@ public class EnvironmentGenerator : Environment
         Finish();
 
         collider.enabled = true;
+
+        nodes = new List<Node>(CalculateNodes(tileDetails.tileMap));
     }
 
     private void GeneratePellets(Vector3Int playerStart, Vector3Int min, Vector3Int max, Vector3Int ghostMin, Vector3Int ghostMax)
@@ -418,7 +420,7 @@ public class EnvironmentGenerator : Environment
         Gizmos.DrawWireCube(transform.position, ghostBoxScale);
     }
 
-    public override IList<Node> GetNodes()
+    public override IEnumerable<Node> GetNodes()
     {
         return nodes.AsReadOnly();
     }

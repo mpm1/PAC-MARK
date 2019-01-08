@@ -1,9 +1,70 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public abstract class Environment : MonoBehaviour
 {
+    protected Node[] CalculateNodes(Tilemap map)
+    {
+        Rect rect = GetContainingRect();
+        Vector3Int min = map.WorldToCell(new Vector3(rect.xMin, rect.yMin, 0.0f));
+        Vector3Int max = map.WorldToCell(new Vector3(rect.xMax, rect.yMax, 0.0f));
+        Vector3Int dist = max - min;
+        Node?[] result = new Node?[dist.x * dist.y];
+
+        System.Func<Vector3Int, int> getIndex = (position) =>
+        {
+            Vector3Int calc = position - min;
+
+            return calc.x + (calc.y * dist.x);
+        };
+
+        // Find all walkable tiles
+        Vector3Int location = min;
+        int index = 0;
+        for(; location.y <= max.y; ++location.y)
+        {
+            for(location.x = min.x; location.x <= max.x; ++location.x)
+            {
+                if(map.GetTile(location) != null)
+                {
+                    Node node = new Node(map.CellToWorld(location));
+
+                    result[index] = node;
+                }
+                else
+                {
+                    result[index] = null;
+                }
+
+                ++index;
+            }
+        }
+
+        // Connect all walkable tiles
+        location = min;
+        index = 0;
+        Vector3Int[] checkPattern = { Vector3Int.up, Vector3Int.right, Vector3Int.down, Vector3Int.left };
+        for (; location.y <= max.y; ++location.y)
+        {
+            for (location.x = min.x; location.x <= max.x; ++location.x)
+            {
+                if(result[index] != null)
+                {
+                    for(int i = 0; i < 4; ++i)
+                    {
+                        result[index].Value.connections[i] = result[getIndex(location + checkPattern[i])];
+                    }
+                }
+
+                ++index;
+            }
+        }
+
+        return result.Where(n => n != null).Select(n => n.Value).ToArray();
+    }
 
     protected Rect GetContainingRect()
     {
@@ -49,7 +110,7 @@ public abstract class Environment : MonoBehaviour
         }
     }
 
-    public abstract IList<Node> GetNodes();
+    public abstract IEnumerable<Node> GetNodes();
     public abstract Node GetClosetNode(Vector2 pos);
     
     public struct Node
@@ -62,12 +123,12 @@ public abstract class Environment : MonoBehaviour
         /// <summary>
         /// Unobstructed paths to other nodes.
         /// </summary>
-        public IList<Node> connections;
+        public Node?[] connections;
 
         public Node(Vector2 node)
         {
             this.node = node;
-            connections = new List<Node>();
+            connections = new Node?[4];
         }
     }
 }
