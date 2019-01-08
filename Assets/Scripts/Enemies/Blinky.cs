@@ -8,6 +8,6 @@ public class Blinky : GhostBase
     {
         Vector2 location = (Vector2)player.transform.position;
 
-        return FindNextPathNode(location);
+        return FindNextPathLocation(location);
     }
 }

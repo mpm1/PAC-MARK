@@ -427,8 +427,25 @@ public class EnvironmentGenerator : Environment
 
     public override Node GetClosetNode(Vector2 pos)
     {
+        float distance = float.MaxValue;
+        Node result = nodes[0];
+
         // TODO sort the nodes
-        return nodes[0];
+        foreach(Node node in nodes)
+        {
+            float checkDistace = Vector2.Distance(pos, node.node);
+            if(checkDistace < distance)
+            {
+                result = node;
+
+                if(distance < float.Epsilon)
+                {
+                    return result;
+                }
+            }
+        }
+
+        return result;
     }
 }
 

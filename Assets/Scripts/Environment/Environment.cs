@@ -16,6 +16,26 @@ public abstract class Environment : MonoBehaviour
 
         System.Func<Vector3Int, int> getIndex = (position) =>
         {
+            while(position.x < min.x)
+            {
+                position.x += dist.x;
+            }
+
+            while(position.x > max.x)
+            {
+                position.x -= dist.x;
+            }
+
+            while (position.y < min.y)
+            {
+                position.y += dist.y;
+            }
+
+            while (position.y > max.y)
+            {
+                position.y -= dist.y;
+            }
+
             Vector3Int calc = position - min;
 
             return calc.x + (calc.y * dist.x);
@@ -55,7 +75,7 @@ public abstract class Environment : MonoBehaviour
                 {
                     for(int i = 0; i < 4; ++i)
                     {
-                        result[index].Value.connections[i] = result[getIndex(location + checkPattern[i])];
+                        result[index].Value.SetConnection(i, result[getIndex(location + checkPattern[i])]);
                     }
                 }
 
@@ -125,10 +145,58 @@ public abstract class Environment : MonoBehaviour
         /// </summary>
         public Node?[] connections;
 
+        /// <summary>
+        /// A value used for pathfinding
+        /// </summary>
+        public float score;
+        public float fScore;
+
+        public Node? cameFrom;
+
+        private int mConnectionCount;
+        public int connectionCount
+        {
+            get
+            {
+               return mConnectionCount;
+            }
+        }
+
         public Node(Vector2 node)
         {
             this.node = node;
+            mConnectionCount = 0;
+            score = 0.0f;
+            fScore = 0.0f;
             connections = new Node?[4];
+            cameFrom = null;
+        }
+
+        public static bool operator==(Node a, Node b)
+        {
+            return a.node == b.node;
+        }
+
+        public static bool operator !=(Node a, Node b)
+        {
+            return a.node != b.node;
+        }
+
+        public void SetConnection(int index, Node? node)
+        {
+            if(index >= 0 && index < 4)
+            {
+                connections[index] = node;
+            }
+
+            mConnectionCount = 0;
+            foreach(Node? connection in connections)
+            {
+                if(connection != null)
+                {
+                    ++mConnectionCount;
+                }
+            }
         }
     }
 }
