@@ -12,7 +12,7 @@ public abstract class Environment : MonoBehaviour
         Vector3Int min = map.WorldToCell(new Vector3(rect.xMin, rect.yMin, 0.0f));
         Vector3Int max = map.WorldToCell(new Vector3(rect.xMax, rect.yMax, 0.0f));
         Vector3Int dist = max - min;
-        Node?[] result = new Node?[dist.x * dist.y];
+        Node?[] result = new Node?[(dist.x + 1) * (dist.y + 1)];
 
         System.Func<Vector3Int, int> getIndex = (position) =>
         {
@@ -138,21 +138,13 @@ public abstract class Environment : MonoBehaviour
         /// <summary>
         /// The location in world space for this node.
         /// </summary>
-        public Vector2 node;
+        public Vector2 location;
         
         /// <summary>
         /// Unobstructed paths to other nodes.
         /// </summary>
         public Node?[] connections;
-
-        /// <summary>
-        /// A value used for pathfinding
-        /// </summary>
-        public float score;
-        public float fScore;
-
-        public Node? cameFrom;
-
+        
         private int mConnectionCount;
         public int connectionCount
         {
@@ -162,24 +154,31 @@ public abstract class Environment : MonoBehaviour
             }
         }
 
-        public Node(Vector2 node)
+        public Node(Vector2 location)
         {
-            this.node = node;
+            this.location = location;
             mConnectionCount = 0;
-            score = 0.0f;
-            fScore = 0.0f;
             connections = new Node?[4];
-            cameFrom = null;
         }
 
         public static bool operator==(Node a, Node b)
         {
-            return a.node == b.node;
+            return a.location == b.location;
         }
 
         public static bool operator !=(Node a, Node b)
         {
-            return a.node != b.node;
+            return a.location != b.location;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if(obj != null && typeof(Node).IsAssignableFrom(obj.GetType()))
+            {
+                return this == (Node)obj;
+            }
+
+            return false;
         }
 
         public void SetConnection(int index, Node? node)

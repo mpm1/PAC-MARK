@@ -66,24 +66,22 @@ public abstract class GhostBase : MonoBehaviour
     protected Vector2 FindNextPathLocation(Vector2 targetLocation)
     {
         //TODO: optimize to reduce garbage colleciton
-        Node start = environment.GetClosetNode(transform.position);
-        Node target = environment.GetClosetNode(targetLocation);
+        MapPathNode start = new MapPathNode(environment.GetClosetNode(transform.position));
+        MapPathNode target = new MapPathNode(environment.GetClosetNode(targetLocation));
 
         start.score = 0;
-        List<Node> closedSet = new List<Node>();
-        SortedList<float, Node> openSet = new SortedList<float, Node>();
+        List<MapPathNode> closedSet = new List<MapPathNode>();
+        SortedList<float, MapPathNode> openSet = new SortedList<float, MapPathNode>();
         openSet.Add(start.score, start);
-
-        Node? cameFrom = null;
         
         while(openSet.Count > 0)
         {
-            Node current = openSet.Values[0];
+            MapPathNode current = openSet.Values[0];
             
             if(current == target)
             {
-                Node? check = current;
-                Node? lastBefore = current;
+                MapPathNode? check = current;
+                MapPathNode? lastBefore = current;
 
                 while(check.Value.cameFrom != null)
                 {
@@ -91,20 +89,21 @@ public abstract class GhostBase : MonoBehaviour
                     check = lastBefore.Value.cameFrom;
                 }
 
-                return lastBefore.Value.node;
+                return lastBefore.Value.node.Value.location;
             }
 
             openSet.RemoveAt(0);
             closedSet.Add(current);
 
-            foreach(Node? child in current.connections)
+            foreach(Node? child in current.node.Value.connections)
             {
-                if (child == null || closedSet.Contains(child.Value))
+                MapPathNode addChild;
+
+                if (child == null || closedSet.Contains(addChild = new MapPathNode(child.Value)))
                 {
                     continue;
                 }
-
-                Node addChild = child.Value;
+                
                 float tenitiveScore = 1.0f + current.score;
 
                 int index = openSet.IndexOfValue(addChild);
@@ -118,13 +117,54 @@ public abstract class GhostBase : MonoBehaviour
 
                 addChild.score = tenitiveScore;
                 addChild.cameFrom = current;
-                addChild.fScore = CalculateFScore(targetLocation, addChild.node, addChild.score);
+                addChild.fScore = CalculateFScore(targetLocation, addChild.node.Value.location, addChild.score);
                 openSet.Add(addChild.score, addChild);
             }
         }
 
-        return start.node;
+        return start.node.Value.location;
     }
 
     protected abstract Vector2 CalculateNextWaypoint();
+}
+
+public struct MapPathNode
+{
+    public Node? node;
+
+    /// <summary>
+    /// A value used for pathfinding
+    /// </summary>
+    public float score;
+    public float fScore;
+
+    public MapPathNode? cameFrom;
+
+    public MapPathNode(Node node)
+    {
+        this.node = node;
+        score = 0.0f;
+        fScore = 0.0f;
+        cameFrom = null;
+    }
+
+    public static bool operator==(MapPathNode a, MapPathNode b)
+    {
+        return a.node == b.node;
+    }
+
+    public static bool operator !=(MapPathNode a, MapPathNode b)
+    {
+        return a.node != b.node;
+    }
+
+    public override bool Equals(object obj)
+    {
+        if (obj != null && typeof(MapPathNode).IsAssignableFrom(obj.GetType()))
+        {
+            return this == (MapPathNode)obj;
+        }
+
+        return false;
+    }
 }
