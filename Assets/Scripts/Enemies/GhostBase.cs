@@ -79,7 +79,15 @@ public abstract class GhostBase : MonoBehaviour
         Vector3 eyeVector = (player.transform.position - transform.position).normalized;
         eyes.localPosition = eyePosition + (eyeVector * eyeRadius);
     }
-    
+
+    private void LateUpdate()
+    {
+        if (environment != null)
+        {
+            environment.HandleObjectOnEdge(transform);
+        }
+    }
+
     protected Vector2 FindNextPathLocation(Vector2 targetLocation)
     {
         //TODO: optimize to reduce garbage colleciton
@@ -107,7 +115,31 @@ public abstract class GhostBase : MonoBehaviour
                     check = lastBefore.cameFrom;
                 }
 
-                return lastBefore.node.Value.location;
+                Vector2 result = lastBefore.node.Value.location;
+
+                // Make sure the ghost can walk past the edges
+                if(environment.min.x - result.x >= float.Epsilon)
+                {
+                    Debug.Log("Ghost at right");
+                    result += Vector2.right * 1.5f;
+                }else if(environment.max.x - result.x <= float.Epsilon)
+                {
+                    Debug.Log("Ghost at left");
+                    result += Vector2.left * 1.5f;
+                }
+
+                if (environment.min.y - result.y >= float.Epsilon)
+                {
+                    Debug.Log("Ghost at top");
+                    result += Vector2.up * 10.0f;
+                }
+                else if (environment.max.y - result.y <= float.Epsilon)
+                {
+                    Debug.Log("Ghost at bottom");
+                    result += Vector2.down * 10.0f;
+                }
+
+                return result;
             }
 
             openSet.RemoveAt(0);
@@ -191,7 +223,7 @@ public class MapPathNode
     /// </summary>
     public float score;
     public float fScore;
-
+    
     public MapPathNode cameFrom;
 
     public MapPathNode(Node node)

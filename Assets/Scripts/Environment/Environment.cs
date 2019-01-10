@@ -6,6 +6,12 @@ using UnityEngine.Tilemaps;
 
 public abstract class Environment : MonoBehaviour
 {
+    [HideInInspector]
+    public Vector2 min;
+
+    [HideInInspector]
+    public Vector2 max;
+
     protected Node[] CalculateNodes(Tilemap map)
     {
         Rect rect = GetContainingRect();
@@ -13,6 +19,9 @@ public abstract class Environment : MonoBehaviour
         Vector3Int max = map.WorldToCell(new Vector3(rect.xMax, rect.yMax, 0.0f));
         Vector3Int dist = max - min;
         Node?[] result = new Node?[(dist.x + 1) * (dist.y + 1)];
+
+        this.min = map.CellToWorld(min);
+        this.max = map.CellToWorld(max);
 
         System.Func<Vector3Int, int> getIndex = (position) =>
         {
@@ -106,22 +115,22 @@ public abstract class Environment : MonoBehaviour
         // In the future we will need to wrap this movement.
         if (!container.Contains(location))
         {
-            while (location.y < container.yMin)
+            while (location.y < min.y)
             {
                 location.y += container.height;
             }
 
-            while (location.y > container.yMax)
+            while (location.y > max.y)
             {
                 location.y -= container.height;
             }
 
-            while (location.x < container.xMin)
+            while (location.x < min.x)
             {
                 location.x += container.width;
             }
 
-            while (location.x > container.xMax)
+            while (location.x > max.x)
             {
                 location.x -= container.width;
             }
