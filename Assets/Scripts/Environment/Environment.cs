@@ -18,27 +18,27 @@ public abstract class Environment : MonoBehaviour
         {
             while(position.x < min.x)
             {
-                position.x += dist.x;
+                position.x += (dist.x + 1);
             }
 
             while(position.x > max.x)
             {
-                position.x -= dist.x;
+                position.x -= (dist.x + 1);
             }
 
             while (position.y < min.y)
             {
-                position.y += dist.y;
+                position.y += (dist.y + 1);
             }
 
             while (position.y > max.y)
             {
-                position.y -= dist.y;
+                position.y -= (dist.y + 1);
             }
 
             Vector3Int calc = position - min;
 
-            return calc.x + (calc.y * dist.x);
+            return calc.x + (calc.y * (dist.x + 1));
         };
 
         // Find all walkable tiles
@@ -48,7 +48,7 @@ public abstract class Environment : MonoBehaviour
         {
             for(location.x = min.x; location.x <= max.x; ++location.x)
             {
-                if(map.GetTile(location) != null)
+                if(map.GetTile(location) == null)
                 {
                     Node node = new Node(map.CellToWorld(location));
 

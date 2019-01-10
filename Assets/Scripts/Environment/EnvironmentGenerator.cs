@@ -433,9 +433,10 @@ public class EnvironmentGenerator : Environment
         // TODO sort the nodes
         foreach(Node node in nodes)
         {
-            float checkDistace = Vector2.Distance(pos, node.location);
-            if(checkDistace < distance)
+            float checkDistance = Vector2.Distance(pos, node.location);
+            if(checkDistance < distance)
             {
+                distance = checkDistance;
                 result = node;
 
                 if(distance < float.Epsilon)
