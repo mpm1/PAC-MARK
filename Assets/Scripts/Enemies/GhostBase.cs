@@ -25,7 +25,7 @@ public abstract class GhostBase : MonoBehaviour
     {
         if (lastPath != null)
         {
-            Gizmos.color = Color.red;
+            Gizmos.color = renderer.color;
             Vector2 lastLocation = lastPath.node.Value.location;
             MapPathNode current = lastPath;
 
@@ -78,11 +78,6 @@ public abstract class GhostBase : MonoBehaviour
         // Set the eye movement
         Vector3 eyeVector = (player.transform.position - transform.position).normalized;
         eyes.localPosition = eyePosition + (eyeVector * eyeRadius);
-    }
-
-    protected float CalculateFScore(Vector2 target, Vector2 current, float score)
-    {
-        return Vector2.Distance(target, current) * score;
     }
     
     protected Vector2 FindNextPathLocation(Vector2 targetLocation)
@@ -153,6 +148,7 @@ public abstract class GhostBase : MonoBehaviour
     }
 
     protected abstract Vector2 CalculateNextWaypoint();
+    protected abstract float CalculateFScore(Vector2 target, Vector2 current, float score);
 }
 
 public class Vector2Comparer : IComparer<Vector2>

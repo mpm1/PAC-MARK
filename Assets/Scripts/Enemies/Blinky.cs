@@ -10,4 +10,9 @@ public class Blinky : GhostBase
 
         return FindNextPathLocation(location);
     }
+
+    protected override float CalculateFScore(Vector2 target, Vector2 current, float score)
+    {
+        return Vector2.Distance(target, current) * score;
+    }
 }
