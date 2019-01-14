@@ -6,6 +6,8 @@ using UnityEngine.Tilemaps;
 
 public abstract class Environment : MonoBehaviour
 {
+    private static Vector3Int[] checkPattern = new Vector3Int[]{ Vector3Int.up, Vector3Int.right, Vector3Int.down, Vector3Int.left };
+
     [HideInInspector]
     public Vector2 min;
 
@@ -75,7 +77,7 @@ public abstract class Environment : MonoBehaviour
         // Connect all walkable tiles
         location = min;
         index = 0;
-        Vector3Int[] checkPattern = { Vector3Int.up, Vector3Int.right, Vector3Int.down, Vector3Int.left };
+        
         for (; location.y <= max.y; ++location.y)
         {
             for (location.x = min.x; location.x <= max.x; ++location.x)

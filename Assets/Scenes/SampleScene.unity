@@ -251,7 +251,7 @@ GameObject:
   m_Component:
   - component: {fileID: 411219199}
   - component: {fileID: 411219200}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Eyes
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -707,6 +707,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e72504d98aa75da4f9354bb2446d1771, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  min: {x: 0, y: 0}
+  max: {x: 0, y: 0}
   smallPellet: {fileID: 5915294600694721298, guid: d6b879df0a276e54b97e870eae9d8e2f,
     type: 3}
   largePellet: {fileID: 0}
@@ -748,9 +750,9 @@ GameObject:
   - component: {fileID: 1264873060}
   - component: {fileID: 1264873059}
   - component: {fileID: 1264873058}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Pinky
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -902,9 +904,10 @@ GameObject:
   - component: {fileID: 1295642416}
   - component: {fileID: 1295642415}
   - component: {fileID: 1295642414}
-  m_Layer: 0
+  - component: {fileID: 1295642418}
+  m_Layer: 8
   m_Name: Blinky
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1042,6 +1045,18 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
+--- !u!114 &1295642418
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1295642411}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e34754d58ac34d44190f947edc29335d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &1692141564 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 937124671817345002, guid: b9f3370e8004c0449ad37ed5b59542fb,
@@ -1064,7 +1079,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1692697808}
   - component: {fileID: 1692697809}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Eyes
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1189,6 +1204,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 937124671817345004, guid: b9f3370e8004c0449ad37ed5b59542fb,
+        type: 3}
+      propertyPath: m_Layer
+      value: 9
+      objectReference: {fileID: 0}
     - target: {fileID: 937124671817345001, guid: b9f3370e8004c0449ad37ed5b59542fb,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1281,7 +1301,7 @@ PrefabInstance:
     - target: {fileID: 937124671817345003, guid: b9f3370e8004c0449ad37ed5b59542fb,
         type: 3}
       propertyPath: m_Constraints
-      value: 0
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 937124671817345003, guid: b9f3370e8004c0449ad37ed5b59542fb,
         type: 3}

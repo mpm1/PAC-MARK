@@ -6,6 +6,7 @@ using static Environment;
 
 public abstract class GhostBase : MonoBehaviour
 {
+    private static Vector2[] movementDirections = { Vector2.up, Vector2.right, Vector2.down, Vector2.left };
     public float speed = 3f;
     public float eyeRadius = 0.15f;
 
@@ -116,27 +117,10 @@ public abstract class GhostBase : MonoBehaviour
                 }
 
                 Vector2 result = lastBefore.node.Value.location;
-
-                // Make sure the ghost can walk past the edges
-                if(environment.min.x - result.x >= float.Epsilon)
+                
+                if(result.x <= environment.min.x || result.x >= environment.max.x || result.y <= environment.min.y || result.y >= environment.max.y)
                 {
-                    Debug.Log("Ghost at right");
-                    result += Vector2.right * 1.5f;
-                }else if(environment.max.x - result.x <= float.Epsilon)
-                {
-                    Debug.Log("Ghost at left");
-                    result += Vector2.left * 1.5f;
-                }
-
-                if (environment.min.y - result.y >= float.Epsilon)
-                {
-                    Debug.Log("Ghost at top");
-                    result += Vector2.up * 10.0f;
-                }
-                else if (environment.max.y - result.y <= float.Epsilon)
-                {
-                    Debug.Log("Ghost at bottom");
-                    result += Vector2.down * 10.0f;
+                    result = (Vector2)transform.position + (lastBefore.direction * speed);
                 }
 
                 return result;
@@ -145,8 +129,9 @@ public abstract class GhostBase : MonoBehaviour
             openSet.RemoveAt(0);
             closedSet.Add(current.node.Value.location, current);
 
-            foreach(Node? child in current.node.Value.connections)
-            {
+            for(int i = 0; i < 4; ++i) {
+                Node? child = current.node.Value.connections[i];
+
                 if (child == null || closedSet.ContainsKey(child.Value.location))
                 {
                     continue;
@@ -172,6 +157,7 @@ public abstract class GhostBase : MonoBehaviour
                 addChild.score = tenitiveScore;
                 addChild.cameFrom = current;
                 addChild.fScore = CalculateFScore(targetLocation, addChild.node.Value.location, addChild.score);
+                addChild.direction = movementDirections[i];
                 openSet.Add(addChild.fScore, addChild);
             }
         }
@@ -217,6 +203,7 @@ public class MapPathNodeComparer : IComparer<float>
 public class MapPathNode
 {
     public Node? node;
+    public Vector2 direction; // This may be different in order to account for the torus world of pacman
 
     /// <summary>
     /// A value used for pathfinding
