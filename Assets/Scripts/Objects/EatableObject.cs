@@ -5,6 +5,7 @@ using UnityEngine;
 public class EatableObject : MonoBehaviour
 {
     public int score = 10;
+    public bool triggerGhostVulnerable = false;
      
     private void OnTriggerEnter2D(Collider2D collision)
     {
@@ -13,6 +14,14 @@ public class EatableObject : MonoBehaviour
         {
             playerScore.AddScore(score);
             AnimateAndDestroy();
+
+            if (triggerGhostVulnerable)
+            {
+                foreach(GhostHealth ghost in GhostHealth.Ghosts)
+                {
+                    ghost.MakeVulnerable();
+                }
+            }
         }
     }
 

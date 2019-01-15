@@ -14,6 +14,9 @@ public abstract class Environment : MonoBehaviour
     [HideInInspector]
     public Vector2 max;
 
+    [HideInInspector]
+    public Vector2 center;
+
     protected Node[] CalculateNodes(Tilemap map)
     {
         Rect rect = GetContainingRect();
@@ -24,6 +27,7 @@ public abstract class Environment : MonoBehaviour
 
         this.min = map.CellToWorld(min);
         this.max = map.CellToWorld(max);
+        this.center = (this.min + this.max) / 2.0f;
 
         System.Func<Vector3Int, int> getIndex = (position) =>
         {
