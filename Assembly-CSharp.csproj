@@ -60,11 +60,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\Enemies\Blinky.cs" />
-    <Compile Include="Assets\Scripts\Enemies\GhostBase.cs" />
     <Compile Include="Assets\Scripts\Enemies\GhostHealth.cs" />
-    <Compile Include="Assets\Scripts\Enemies\Pinky.cs" />
+    <Compile Include="Assets\Scripts\Enemies\GhostMovement.cs" />
     <Compile Include="Assets\Scripts\Environment\Environment.cs" />
+    <Compile Include="Assets\Scripts\Environment\EnvironmentBase.cs" />
     <Compile Include="Assets\Scripts\Environment\EnvironmentCamera.cs" />
     <Compile Include="Assets\Scripts\Environment\EnvironmentGenerator.cs" />
     <Compile Include="Assets\Scripts\Objects\EatableObject.cs" />

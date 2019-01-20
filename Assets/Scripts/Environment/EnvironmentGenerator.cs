@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-public class EnvironmentGenerator : Environment
+public class EnvironmentGenerator : EnvironmentBase
 {
     private enum eDirection { East = 0x01, North = 0x02, South = 0x04, West = 0x08, All = 0x0F};
     public enum eMirror {
@@ -17,8 +17,7 @@ public class EnvironmentGenerator : Environment
     public int minLargePellets = 2;
     public int seed = 0;
     public eMirror mirroring = eMirror.Vertical;
-
-    public Vector3 ghostBoxScale;
+    
     public float ghostBoxDoorSize;
 
     private bool isVerticalMirror
@@ -131,11 +130,22 @@ public class EnvironmentGenerator : Environment
 
     private void Finish()
     {
-        Rect rect = new Rect(transform.position - (transform.lossyScale / 2.0f), transform.lossyScale);
+        // Remove the ghost door
+        Rect rect = new Rect(transform.position - (ghostBoxScale / 2.0f), ghostBoxScale);
         Vector3Int min = tileDetails.GetTileCoordinates(new Vector3(rect.xMin, rect.yMin, 0.0f));
         Vector3Int max = tileDetails.GetTileCoordinates(new Vector3(rect.xMax, rect.yMax, 0.0f));
-        Vector3Int location = min;
+        Vector3Int location = new Vector3Int((min.x + max.x) >> 1, max.y, min.z);
 
+        tileDetails.RemoveWall(location);
+        tileDetails.RemoveWall(location + Vector3Int.left);
+        tileDetails.RemoveWall(location + Vector3Int.right);
+
+        // Set the tiles to the proper shape
+        rect = new Rect(transform.position - (transform.lossyScale / 2.0f), transform.lossyScale);
+        min = tileDetails.GetTileCoordinates(new Vector3(rect.xMin, rect.yMin, 0.0f));
+        max = tileDetails.GetTileCoordinates(new Vector3(rect.xMax, rect.yMax, 0.0f));
+        location = min;
+        
         for (; location.y <= max.y; ++location.y)
         {
             for(location.x = min.x; location.x <= max.x; ++location.x)
@@ -411,13 +421,6 @@ public class EnvironmentGenerator : Environment
     private bool HasDoorDirection(int input, eDirection direction)
     {
         return (input & (int)direction) == (int)direction;
-    }
-
-    protected override void OnDrawGizmos()
-    {
-        base.OnDrawGizmos();
-
-        Gizmos.DrawWireCube(transform.position, ghostBoxScale);
     }
 
     public override IEnumerable<Node> GetNodes()

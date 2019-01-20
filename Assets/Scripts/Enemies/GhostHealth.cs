@@ -32,13 +32,13 @@ public class GhostHealth : MonoBehaviour
 
     private void Update()
     {
-        if(vulnerableTime > 0.0f)
+        if(IsVulnerable())
         {
             vulnerableTime -= Time.deltaTime;
 
             if(vulnerableTime <= 0.0f)
             {
-                animator.SetBool("isVulnerable", true);
+                animator.SetBool("isVulnerable", false);
             }
         }
     }
@@ -49,7 +49,7 @@ public class GhostHealth : MonoBehaviour
 
         if(player != null)
         {
-            if (vulnerableTime > 0.0f)
+            if (IsVulnerable())
             {
                 Died(player);
             }
@@ -80,6 +80,11 @@ public class GhostHealth : MonoBehaviour
         }
 
         return true;
+    }
+
+    public bool IsVulnerable()
+    {
+        return vulnerableTime > 0.0f;
     }
 
     public void MakeVulnerable()
