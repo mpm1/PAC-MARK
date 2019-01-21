@@ -5,8 +5,8 @@ using UnityEngine;
 
 public class GhostHealth : MonoBehaviour
 {
-    public float vulnerableCooldownTime = 12.0f; 
-
+    public float vulnerableCooldownTime = 12.0f;
+    
     public float vulnerableTime = 0.0f;
 
     private static List<GhostHealth> mGhosts = new List<GhostHealth>();
@@ -21,6 +21,8 @@ public class GhostHealth : MonoBehaviour
     private bool isAlive = true;
     private Animator animator;
     private Environment environment;
+    private Collider2D[] colliders;
+    private new EnvironmentCamera camera;
 
     private void Awake()
     {
@@ -28,6 +30,9 @@ public class GhostHealth : MonoBehaviour
 
         animator = GetComponent<Animator>();
         environment = GameObject.FindObjectOfType<Environment>();
+
+        colliders = GetComponents<Collider2D>();
+        camera = GameObject.FindObjectOfType<EnvironmentCamera>();
     }
 
     private void Update()
@@ -51,6 +56,7 @@ public class GhostHealth : MonoBehaviour
         {
             if (IsVulnerable())
             {
+                camera.TriggerPlayerFocus();
                 Died(player);
             }
             else
@@ -60,12 +66,34 @@ public class GhostHealth : MonoBehaviour
         }
     }
 
+    public bool IsAlive()
+    {
+        return isAlive;
+    }
+
     public void Died(PlayerHealth player)
     {
         animator.SetTrigger("Died");
+        animator.ResetTrigger("Alive");
         isAlive = false;
 
-        //TODO: Disable collision and move back to the center.
+        foreach(Collider2D collider in colliders)
+        {
+            collider.enabled = false;
+        }
+    }
+
+    public void Alive()
+    {
+        animator.SetTrigger("Alive");
+        animator.ResetTrigger("Died");
+        vulnerableTime = 0.0f;
+        isAlive = true;
+
+        foreach (Collider2D collider in colliders)
+        {
+            collider.enabled = false;
+        }
     }
 
     public bool CanMove(ref Vector2 location)

@@ -93,7 +93,14 @@ public class GhostMovement : MonoBehaviour
 
     private void Update()
     {
-        waypoint = FindNextPathLocation(health.IsVulnerable() ? vulnerablePattern : regularPattern);
+        if (health.IsAlive())
+        {
+            waypoint = FindNextPathLocation(health.IsVulnerable() ? vulnerablePattern : regularPattern);
+        }
+        else
+        {
+            waypoint = environment.center;
+        }
     }
 
     private void FixedUpdate()
@@ -122,6 +129,14 @@ public class GhostMovement : MonoBehaviour
         if (environment != null)
         {
             environment.HandleObjectOnEdge(transform);
+        }
+
+        if (!health.IsAlive())
+        {
+            if(Vector2.Distance((Vector2)transform.position, waypoint) < 0.1f)
+            {
+                health.Alive();
+            }
         }
     }
 

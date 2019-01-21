@@ -10,6 +10,7 @@ public class EnvironmentCamera : MonoBehaviour
     public float smoothing = 0.2f;
 
     private new Camera camera;
+    private float zoomCooldown = 0.0f;
 
     private void Awake()
     {
@@ -25,8 +26,15 @@ public class EnvironmentCamera : MonoBehaviour
 
         if (followPlayer)
         {
+            zoomCooldown -= Time.deltaTime;
+
+            if(zoomCooldown <= 0)
+            {
+                followPlayer = false;
+            }
+
             newPosition = player.transform.position;
-            zoom = 2.0f; //TODO: increase the camera size to show all ghosts.
+            zoom = 3.0f; //TODO: increase the camera size to show all ghosts.
         }
         else
         {
@@ -37,5 +45,11 @@ public class EnvironmentCamera : MonoBehaviour
         newPosition.z = z;
         transform.position = Vector3.Lerp(transform.position, newPosition, smoothing);
         camera.orthographicSize = Mathf.Lerp(camera.orthographicSize, zoom, smoothing);
+    }
+
+    public void TriggerPlayerFocus()
+    {
+        followPlayer = true;
+        zoomCooldown = 0.5f;
     }
 }
