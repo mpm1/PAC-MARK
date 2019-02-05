@@ -60,6 +60,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Menu.cs" />
     <Compile Include="Assets\Scripts\Enemies\GhostHealth.cs" />
     <Compile Include="Assets\Scripts\Enemies\GhostMovement.cs" />
     <Compile Include="Assets\Scripts\Environment\Environment.cs" />

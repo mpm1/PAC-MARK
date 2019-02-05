@@ -5,6 +5,7 @@ using UnityEngine;
 public class PlayerHealth : MonoBehaviour
 {
     public bool isAlive = true;
+    public Menu menu;
 
     private PlayerMovement playerMovement;
     private Animator animator;
@@ -23,5 +24,10 @@ public class PlayerHealth : MonoBehaviour
         rigidbody.simulated = false;
 
         animator.SetTrigger("Died");
+    }
+
+    public void AfterDie()
+    {
+        menu.TriggerGameOver();
     }
 }
